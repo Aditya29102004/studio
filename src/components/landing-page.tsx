@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, Edit, Rocket } from "lucide-react";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { BackgroundAnimation } from "./background-animation";
 
 const howItWorks = [
@@ -31,6 +30,8 @@ const exampleTests = [
   { title: "SaaS Dashboard Usability", reward: 30 },
   { title: "Landing Page Copy Review", reward: 10 },
   { title: "Onboarding Process Analysis", reward: 25 },
+  { title: "New App Icon Feedback", reward: 5 },
+  { title: "Homepage Headline A/B Test", reward: 15 },
 ];
 
 
@@ -79,28 +80,28 @@ export function LandingPage() {
            <div className="text-center mb-12">
                 <h2 className="text-3xl font-bold">See What's Being Tested</h2>
             </div>
-           <Carousel opts={{ loop: true, align: "start" }} className="w-full">
-            <CarouselContent className="-ml-4">
-              {exampleTests.map((test, index) => (
-                <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
-                  <div className="p-1">
-                    <Card className="bg-white border-neutral-200 shadow-sm hover:shadow-md transition-shadow">
-                        <CardHeader>
-                            <CardTitle className="text-lg font-semibold text-black truncate filter blur-sm">
-                                {test.title}
-                            </CardTitle>
-                        </CardHeader>
-                      <CardContent>
-                        <p className="text-sm font-semibold text-black">{test.reward} CC</p>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="border-neutral-300 hover:bg-neutral-100" />
-            <CarouselNext className="border-neutral-300 hover:bg-neutral-100" />
-          </Carousel>
+           <div className="relative flex overflow-hidden group">
+                <div className="flex animate-marquee-infinite group-hover:paused space-x-4">
+                    {exampleTests.map((test, index) => (
+                        <Card key={index} className="bg-white border-neutral-200 shadow-sm w-80 flex-shrink-0">
+                            <CardContent className="p-4 flex items-center justify-between">
+                                <p className="font-semibold text-black truncate filter blur-sm">{test.title}</p>
+                                <div className="text-sm font-semibold text-black whitespace-nowrap ml-4">{test.reward} CC</div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+                <div className="absolute top-0 flex animate-marquee-infinite-2 group-hover:paused space-x-4">
+                     {exampleTests.map((test, index) => (
+                        <Card key={index + exampleTests.length} className="bg-white border-neutral-200 shadow-sm w-80 flex-shrink-0">
+                             <CardContent className="p-4 flex items-center justify-between">
+                                <p className="font-semibold text-black truncate filter blur-sm">{test.title}</p>
+                                <div className="text-sm font-semibold text-black whitespace-nowrap ml-4">{test.reward} CC</div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+           </div>
         </section>
 
       </div>
@@ -108,7 +109,7 @@ export function LandingPage() {
         <div className="container mx-auto px-4 py-16 text-center">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">Join hundreds of testers & founders improving startups daily.</h2>
             <Button asChild size="lg" variant="secondary" className="bg-white text-black hover:bg-neutral-200">
-                <Link href="/dashboard">Get Started Free</Link>
+                <Link href="/signup">Get Started Free</Link>
             </Button>
         </div>
       </section>
