@@ -21,6 +21,7 @@ import { Check, Clock, Coins, Upload, Loader2, User } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { submitTestFeedback } from "@/lib/actions";
 
 
 type TestDetails = {
@@ -98,28 +99,19 @@ function TestDetailsContent() {
   const handleSubmitFeedback = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user || !test) {
-        toast({ title: "Error", description: "You must be logged in.", variant: "destructive" });
+    
+    if (!testId) {
+        toast({ title: "Error", description: "Test ID is missing.", variant: "destructive" });
         setSubmitting(false);
         return;
     }
 
-    const submissionData = {
-        test_id: test.id,
-        user_id: user.id,
-        status: 'pending',
-        feedback: JSON.stringify(answers),
-    }
+    const result = await submitTestFeedback(parseInt(testId), answers);
 
-    const { error } = await supabase.from('test_submissions').insert([submissionData]);
-
-    if (error) {
-        toast({ title: "Submission Failed", description: error.message, variant: "destructive" });
+    if (result.error) {
+        toast({ title: "Submission Failed", description: result.error, variant: "destructive" });
     } else {
-        toast({ title: "Success!", description: "Your feedback has been submitted." });
+        toast({ title: "Success!", description: "Your feedback has been submitted for review." });
         router.push('/dashboard');
     }
     setSubmitting(false);

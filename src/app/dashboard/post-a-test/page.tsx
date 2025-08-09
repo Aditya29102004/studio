@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +23,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { CheckCircle, PlusCircle, Trash2, Upload, Video, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { postNewTest } from "@/lib/actions";
 
 type Question = {
     type: 'text' | 'mcq' | 'rating';
@@ -91,71 +91,26 @@ export default function PostTestPage() {
 
     const handlePublish = async () => {
         setLoading(true);
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
-            toast({ title: "Error", description: "You must be logged in to post a test.", variant: "destructive" });
-            setLoading(false);
-            return;
-        }
-
-        // Check if profile exists, if not, wait a bit and retry.
-        // This can happen if the user signs up and is immediately redirected.
-        let { data: profile } = await supabase.from('profiles').select('id').eq('id', user.id).single();
-        if (!profile) {
-            await new Promise(resolve => setTimeout(resolve, 1500)); // wait for db replication
-            let { data: retryProfile } = await supabase.from('profiles').select('id').eq('id', user.id).single();
-            if(!retryProfile) {
-                 toast({ title: "Failed to publish test", description: "Could not find your user profile. Please try again in a moment.", variant: "destructive" });
-                 setLoading(false);
-                 return;
-            }
-        }
-
 
         const testData = {
-            user_id: user.id,
             title,
             description,
             category,
             estimated_time: parseInt(estimatedTime),
             max_testers: parseInt(maxTesters),
             reward_credits: parseInt(creditsPerTester),
-            instructions: JSON.stringify(instructions),
+            instructions,
             proof_method: proofMethod,
-            questions: JSON.stringify(questions),
+            questions,
             status: 'open'
         };
 
-        const totalCost = parseInt(maxTesters) * parseInt(creditsPerTester);
+        const result = await postNewTest(testData);
 
-        const { data, error } = await supabase.from('tests').insert([testData]).select();
-
-        if (error) {
-            toast({ title: "Failed to publish test", description: error.message, variant: "destructive" });
+        if (result.error) {
+            toast({ title: "Failed to publish test", description: result.error, variant: "destructive" });
             setLoading(false);
         } else {
-             // We don't need to call the RPC function here for deduction.
-             // We can just update the user's profile credits directly.
-             const {data: profileData, error: profileError} = await supabase.from('profiles').select('credits').eq('id', user.id).single();
-             if(profileData){
-                const newCredits = profileData.credits - totalCost;
-                const {error: updateError} = await supabase.from('profiles').update({credits: newCredits}).eq('id', user.id);
-                
-                if(updateError) {
-                    console.error("Failed to deduct credits", updateError);
-                     toast({ title: "Warning", description: "Test published, but failed to deduct credits.", variant: "destructive" });
-                } else {
-                    // Also create a transaction record for the deduction
-                     await supabase.from('credit_transactions').insert({
-                        user_id: user.id,
-                        amount: -totalCost,
-                        description: `Posted test: ${title}`
-                     });
-                }
-             }
-
-
             toast({ title: "Success!", description: "Your test has been published." });
             router.push('/dashboard');
         }
@@ -174,7 +129,7 @@ export default function PostTestPage() {
         
         {/* Progress Bar */}
         <div className="w-full bg-neutral-200 rounded-full h-2.5">
-            <div className="bg-black h-2.5 rounded-full transition-all duration-500" style={{ width: `${((step - 1) / 3) * 100}%` }}></div>
+            <div className="bg-black h-2.5 rounded-full transition-all duration-500" style={{ width: `${((step) / 4) * 100}%` }}></div>
         </div>
 
         {step === 1 && (
@@ -349,7 +304,7 @@ export default function PostTestPage() {
                 <CardTitle>Step 4: Review & Publish</CardTitle>
                 <CardDescription>
                     Review the details and publish your test to the community.
-                </CardDescription>
+                </Description>
                 </CardHeader>
                 <CardContent className="space-y-4">
                      <Card className="bg-neutral-50 border-neutral-200">
