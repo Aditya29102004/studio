@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Coins, User, LogOut, Bell } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/icons";
@@ -21,46 +21,45 @@ export function DashboardHeader() {
 
   const navLinks = [
     { href: "/dashboard", label: "Dashboard" },
-    { href: "/dashboard/page", label: "Browse Tests" },
+    { href: "/dashboard/browse-tests", label: "Browse Tests" },
     { href: "/dashboard/post-a-test", label: "Post a Test" },
+    { href: "/dashboard/credits", label: "My Credits" },
+    { href: "/dashboard/profile", label: "Profile" },
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
+      <div className="container mx-auto flex h-[70px] items-center justify-between px-4">
         <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-2">
-            <Logo className="h-6 w-6" />
-            <span className="font-bold">IdeaSoop Beta</span>
+          <Link href="/" className="flex items-center gap-2 group">
+            <span className="font-bold text-lg text-black group-hover:text-neutral-700">IdeaSoop Beta</span>
+            <div className="w-full h-px bg-neutral-300 transition-all group-hover:bg-neutral-400"></div>
           </Link>
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  "text-muted-foreground transition-colors hover:text-foreground",
-                  pathname === link.href && "text-foreground"
-                )}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
         </div>
+
+        <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={cn(
+                "text-neutral-500 transition-colors hover:text-black",
+                pathname === link.href && "text-black"
+              )}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+
         <div className="flex items-center gap-4">
-           <Button variant="ghost" size="icon" className="rounded-full">
-              <Coins className="h-5 w-5" />
-              <span className="sr-only">Credits</span>
-            </Button>
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <Bell className="h-5 w-5" />
-              <span className="sr-only">Notifications</span>
-            </Button>
+          <div className="bg-neutral-100 text-black text-sm font-medium px-3 py-1.5 rounded-full">
+            120 CC
+          </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                <Avatar className="h-9 w-9">
+              <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                <Avatar className="h-10 w-10">
                   <AvatarImage src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="User avatar" />
                   <AvatarFallback>U</AvatarFallback>
                 </Avatar>
@@ -82,13 +81,6 @@ export function DashboardHeader() {
                   <span>Profile</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/dashboard/credits">
-                  <Coins className="mr-2 h-4 w-4" />
-                  <span>Credits</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
               <DropdownMenuItem>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
