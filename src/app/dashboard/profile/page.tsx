@@ -75,13 +75,7 @@ function ProfileContent() {
         if (profileError) {
           console.error("Error fetching profile:", profileError.message);
         } else if (profileData) {
-            const { data: {user: authUser}, error: authError } = await supabase.auth.admin.getUserById(profileData.id);
-            if (authError) {
-                 console.error("Error fetching user email:", authError.message);
-                 setProfile({ ...profileData, email: "N/A" });
-            } else {
-                 setProfile({ ...profileData, email: authUser?.email || "N/A" });
-            }
+            setProfile({ ...profileData, email: user?.email || "N/A" });
         }
 
         const { data: creditData, error: creditError } = await supabase
