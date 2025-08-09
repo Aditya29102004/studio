@@ -30,8 +30,8 @@ export function DashboardHeader() {
       <div className="container mx-auto flex h-[70px] items-center justify-between px-4">
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2 group">
+            <Logo className="h-6 w-6 text-black" />
             <span className="font-bold text-lg text-black group-hover:text-neutral-700">IdeaSoop Beta</span>
-            <div className="w-full h-px bg-neutral-300 transition-all group-hover:bg-neutral-400"></div>
           </Link>
         </div>
 

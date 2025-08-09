@@ -7,72 +7,17 @@ export function Logo(props: SVGProps<SVGSVGElement>) {
       height="24"
       viewBox="0 0 24 24"
       fill="none"
-      xmlns="http://www.w3.org/2000/svg"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       {...props}
     >
-      <path
-        d="M9 18.2222C9 19.4689 9.62319 20.6133 10.6359 21.3259C11.6486 22.0386 12.9427 22.2413 14.1234 21.8804C15.304 21.5195 16.2429 20.6366 16.7139 19.483C17.1849 18.3294 17.1415 17.0053 16.6 -16"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M10 15H14"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M12 2V5"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M4.92969 4.92969L7.05069 7.05069"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M16.9492 7.05069L19.0702 4.92969"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M2 12H5"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M19 12H22"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M16 15.2222C16.8906 14.6301 17.5 13.623 17.5 12.5C17.5 10.7761 16.1213 9.39739 14.4 9.12305"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M6.5 12.5C6.5 13.623 7.10944 14.6301 8 15.2222"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+      <path d="M15 14c.2-1 .7-1.7 1.5-2.5C17.7 10.2 18 9 18 8c0-2.2-1.8-4-4-4-1.1 0-2.1.5-2.8 1.2-1.4 1.5-2.8 3.2-4.2 5.1-1.2 1.5-2.4 3-3 4.5-.6 1.5-1 3.2.3 4.6.8 1.1 2.2 1.8 3.7 1.8h1.5c.6 0 1.2.2 1.7.7.5.5.7 1.2.7 1.7v.5c0 .6.4 1 1 1h.2c.3 0 .5-.1.7-.3.2-.2.3-.5.3-.7v-.5c0-.6.2-1.2.7-1.7.5-.5 1.2-.7 1.7-.7h1.5c1.5 0 2.9-.7 3.7-1.8.9-1.2.7-2.8.2-4.2-.7-1.5-1.9-2.7-3.2-3.8zM4 17c.3-.9.7-1.7 1.3-2.5" />
+      <path d="M10.2 6.8c.4-.9 1.1-1.4 2-1.6" />
+      <path d="M8.5 10.5c.9-1 2-1.5 3.5-1.5.9 0 1.7.3 2.5 1" />
+      <line x1="12" y1="22" x2="12" y2="22" />
+      <path d="M12 22v-2.5" />
     </svg>
   );
 }
