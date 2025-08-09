@@ -1,6 +1,9 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,13 +14,55 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, User, Menu } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/icons";
 
+type Profile = {
+  full_name: string;
+  email: string;
+  avatar_url: string;
+  credits: number;
+}
+
 export function DashboardHeader() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [profile, setProfile] = useState<Profile | null>(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            const { data: profileData, error } = await supabase
+                .from('profiles')
+                .select('full_name, avatar_url, credits')
+                .eq('id', user.id)
+                .single();
+
+            if (profileData) {
+                setProfile({ ...profileData, email: user.email! });
+            } else if (error) {
+                console.error("Error fetching profile", error)
+            }
+        }
+    }
+    fetchProfile();
+
+    const { data: { subscription } } = supabase.from('profiles').on('*', () => {
+        fetchProfile();
+    }).subscribe();
+
+    return () => {
+        subscription.unsubscribe();
+    }
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/login');
+  }
 
   const navLinks = [
     { href: "/dashboard", label: "Dashboard" },
@@ -52,23 +97,23 @@ export function DashboardHeader() {
 
         <div className="flex items-center gap-4">
           <div className="bg-neutral-100 text-black text-sm font-medium px-3 py-1.5 rounded-full">
-            120 CC
+            {profile?.credits || 0} CC
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="User avatar" />
-                  <AvatarFallback>U</AvatarFallback>
+                  <AvatarImage src={profile?.avatar_url || `https://i.pravatar.cc/150?u=${profile?.email}`} alt="User avatar" />
+                  <AvatarFallback>{profile?.full_name?.[0] || 'U'}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">Alex Doe</p>
+                  <p className="text-sm font-medium leading-none">{profile?.full_name}</p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    alex.doe@example.com
+                    {profile?.email}
                   </p>
                 </div>
               </DropdownMenuLabel>
@@ -79,11 +124,9 @@ export function DashboardHeader() {
                   <span>Profile</span>
                  </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                 <Link href="/login">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
-                 </Link>
+              <DropdownMenuItem onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

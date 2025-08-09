@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,16 +22,49 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle, PlusCircle, Trash2, Upload, Video } from "lucide-react";
+import { CheckCircle, PlusCircle, Trash2, Upload, Video, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 type Question = {
     type: 'text' | 'mcq' | 'rating';
     content: string;
+    options?: string[]; // for mcq
 }
 
 export default function PostTestPage() {
     const [step, setStep] = useState(1);
+    const router = useRouter();
+    const { toast } = useToast();
+    const [loading, setLoading] = useState(false);
+
+    // Step 1 State
+    const [title, setTitle] = useState('');
+    const [description, setDescription] = useState('');
+    const [category, setCategory] = useState('');
+    const [estimatedTime, setEstimatedTime] = useState('');
+    const [maxTesters, setMaxTesters] = useState('');
+    const [creditsPerTester, setCreditsPerTester] = useState('');
+
+    // Step 2 State
+    const [instructions, setInstructions] = useState<string[]>(['']);
+
+    // Step 3 State
+    const [proofMethod, setProofMethod] = useState('form');
     const [questions, setQuestions] = useState<Question[]>([{ type: 'text', content: '' }]);
+
+    const addInstructionStep = () => {
+        setInstructions([...instructions, '']);
+    }
+
+    const removeInstructionStep = (index: number) => {
+        setInstructions(instructions.filter((_, i) => i !== index));
+    }
+
+    const handleInstructionChange = (index: number, value: string) => {
+        const newInstructions = [...instructions];
+        newInstructions[index] = value;
+        setInstructions(newInstructions);
+    }
 
     const addQuestion = () => {
         setQuestions([...questions, { type: 'text', content: '' }]);
@@ -42,8 +77,76 @@ export default function PostTestPage() {
     const handleQuestionTypeChange = (index: number, type: Question['type']) => {
         const newQuestions = [...questions];
         newQuestions[index].type = type;
+        if(type === 'mcq' && !newQuestions[index].options) {
+            newQuestions[index].options = [''];
+        }
         setQuestions(newQuestions);
     }
+
+     const handleQuestionContentChange = (index: number, content: string) => {
+        const newQuestions = [...questions];
+        newQuestions[index].content = content;
+        setQuestions(newQuestions);
+    };
+
+    const handlePublish = async () => {
+        setLoading(true);
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+            toast({ title: "Error", description: "You must be logged in to post a test.", variant: "destructive" });
+            setLoading(false);
+            return;
+        }
+
+        const testData = {
+            user_id: user.id,
+            title,
+            description,
+            category,
+            estimated_time: parseInt(estimatedTime),
+            max_testers: parseInt(maxTesters),
+            reward_credits: parseInt(creditsPerTester),
+            instructions: JSON.stringify(instructions),
+            proof_method: proofMethod,
+            questions: JSON.stringify(questions),
+            status: 'open'
+        };
+
+        // TODO: check user credits before posting
+        const totalCost = parseInt(maxTesters) * parseInt(creditsPerTester);
+
+        const { data, error } = await supabase.from('tests').insert([testData]).select();
+
+        if (error) {
+            toast({ title: "Failed to publish test", description: error.message, variant: "destructive" });
+            setLoading(false);
+        } else {
+             const { error: creditError } = await supabase.rpc('transfer_credits', {
+                from_user_id: user.id,
+                to_user_id: user.id, // Not a real transfer, just logging deduction
+                amount_to_transfer: totalCost,
+                submission_id: null
+             })
+
+             // A bit of a hack, proper way is a transaction
+             // to deduct credits and post test atomically.
+             // For now, just deduct from profile.
+             const {data: profileData, error: profileError} = await supabase.from('profiles').select('credits').eq('id', user.id).single();
+             if(profileData){
+                const {error: updateError} = await supabase.from('profiles').update({credits: profileData.credits - totalCost}).eq('id', user.id);
+                if(updateError) console.log("Failed to deduct credits", updateError)
+             }
+
+
+            toast({ title: "Success!", description: "Your test has been published." });
+            router.push('/dashboard');
+        }
+    }
+
+    const nextStep = () => setStep(step + 1);
+    const prevStep = () => setStep(step - 1);
+
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -68,31 +171,32 @@ export default function PostTestPage() {
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="title">Title</Label>
-                        <Input id="title" placeholder="e.g., Test our new landing page" />
+                        <Input id="title" placeholder="e.g., Test our new landing page" value={title} onChange={e => setTitle(e.target.value)} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="description">Description (supports bold/italic)</Label>
                         <Textarea
                         id="description"
                         placeholder="Describe what you want testers to do and what you're looking for."
+                        value={description} onChange={e => setDescription(e.target.value)}
                         />
                     </div>
                     <div className="grid md:grid-cols-2 gap-4">
                          <div className="space-y-2">
                             <Label htmlFor="category">Category</Label>
-                            <Select>
+                            <Select value={category} onValueChange={setCategory}>
                                 <SelectTrigger id="category"><SelectValue placeholder="Select a category" /></SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="website">Website</SelectItem>
-                                    <SelectItem value="app">App</SelectItem>
-                                    <SelectItem value="form">Form</SelectItem>
-                                    <SelectItem value="design-review">Design Review</SelectItem>
+                                    <SelectItem value="Website">Website</SelectItem>
+                                    <SelectItem value="App">App</SelectItem>
+                                    <SelectItem value="Form">Form</SelectItem>
+                                    <SelectItem value="Design-Review">Design Review</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                         <div className="space-y-2">
                              <Label htmlFor="time">Estimated Time</Label>
-                            <Select>
+                            <Select value={estimatedTime} onValueChange={setEstimatedTime}>
                                 <SelectTrigger id="time"><SelectValue placeholder="Select time" /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="5">5 minutes</SelectItem>
@@ -104,11 +208,11 @@ export default function PostTestPage() {
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="testers">Max Testers</Label>
-                            <Input id="testers" type="number" placeholder="e.g., 50" />
+                            <Input id="testers" type="number" placeholder="e.g., 50" value={maxTesters} onChange={e => setMaxTesters(e.target.value)} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="credits">Credits per Tester</Label>
-                            <Input id="credits" type="number" placeholder="e.g., 20" />
+                            <Input id="credits" type="number" placeholder="e.g., 20" value={creditsPerTester} onChange={e => setCreditsPerTester(e.target.value)} />
                         </div>
                     </div>
                 </CardContent>
@@ -127,10 +231,20 @@ export default function PostTestPage() {
                     <div className="space-y-2">
                         <Label>Checklist</Label>
                         <div className="space-y-2">
-                            <Input placeholder="Step 1: Go to the homepage" />
-                            <Input placeholder="Step 2: Click on the new feature button" />
+                            {instructions.map((step, index) => (
+                                <div key={index} className="flex items-center gap-2">
+                                    <Input 
+                                        placeholder={`Step ${index + 1}: Go to the homepage`} 
+                                        value={step}
+                                        onChange={(e) => handleInstructionChange(index, e.target.value)}
+                                    />
+                                    <Button variant="ghost" size="icon" onClick={() => removeInstructionStep(index)}>
+                                        <Trash2 className="h-4 w-4 text-neutral-500" />
+                                    </Button>
+                                </div>
+                            ))}
                         </div>
-                        <Button variant="outline" size="sm" className="border-neutral-300 hover:bg-neutral-100"><PlusCircle className="mr-2 h-4 w-4" /> Add Step</Button>
+                        <Button variant="outline" size="sm" onClick={addInstructionStep} className="border-neutral-300 hover:bg-neutral-100"><PlusCircle className="mr-2 h-4 w-4" /> Add Step</Button>
                     </div>
                     <div className="space-y-2">
                         <Label>Demo Video (Optional)</Label>
@@ -155,7 +269,7 @@ export default function PostTestPage() {
                 <CardContent className="space-y-6">
                     <div>
                         <Label className="mb-2 block">Proof Method</Label>
-                        <RadioGroup defaultValue="form" className="flex gap-4">
+                        <RadioGroup value={proofMethod} onValueChange={setProofMethod} className="flex gap-4">
                             <Label htmlFor="form-proof" className="flex-1 p-4 border rounded-md cursor-pointer has-[:checked]:border-black">
                                 <RadioGroupItem value="form" id="form-proof" className="sr-only" />
                                 <h4 className="font-semibold">Inbuilt Form</h4>
@@ -195,7 +309,11 @@ export default function PostTestPage() {
                                     </div>
                                     <div className="space-y-2">
                                         <Label>Question</Label>
-                                        <Input placeholder="Enter your question" />
+                                        <Input 
+                                            placeholder="Enter your question" 
+                                            value={q.content}
+                                            onChange={(e) => handleQuestionContentChange(index, e.target.value)}
+                                        />
                                     </div>
                                 </CardContent>
                             </Card>
@@ -219,25 +337,24 @@ export default function PostTestPage() {
                 <CardContent className="space-y-4">
                      <Card className="bg-neutral-50 border-neutral-200">
                         <CardHeader>
-                            <CardTitle className="text-lg">Test our new landing page</CardTitle>
-                             <CardDescription>You are offering 20 credits for this test.</CardDescription>
+                            <CardTitle className="text-lg">{title}</CardTitle>
+                             <CardDescription>You are offering {creditsPerTester} credits for this test.</CardDescription>
                         </CardHeader>
                     </Card>
                     <div className="flex items-center justify-between p-4 bg-neutral-100 rounded-lg">
-                        <p className="font-semibold text-black">Total Cost: 1000 Credits</p>
-                        <p className="text-sm text-neutral-500">Your balance: 120 Credits</p>
+                        <p className="font-semibold text-black">Total Cost: {parseInt(maxTesters || '0') * parseInt(creditsPerTester || '0')} Credits</p>
+                        {/* <p className="text-sm text-neutral-500">Your balance: 120 Credits</p> */}
                     </div>
-                    <Button size="lg" disabled className="bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-400">
-                        <CheckCircle className="mr-2 h-4 w-4" />
-                        Pay 1000 Credits & Publish
+                    <Button size="lg" className="bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-400" onClick={handlePublish} disabled={loading}>
+                        {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+                        Pay & Publish
                     </Button>
-                    <p className="text-xs text-red-600">You don't have enough credits to publish this test.</p>
                 </CardContent>
             </Card>
         )}
          <div className="flex items-center justify-between mt-8">
-            <Button variant="outline" className="border-neutral-300 hover:bg-neutral-100" onClick={() => setStep(step - 1)} disabled={step === 1}>Back</Button>
-            <Button onClick={() => setStep(step + 1)} disabled={step === 4} className="bg-black text-white hover:bg-neutral-800">Next</Button>
+            <Button variant="outline" className="border-neutral-300 hover:bg-neutral-100" onClick={prevStep} disabled={step === 1}>Back</Button>
+            <Button onClick={nextStep} disabled={step === 4} className="bg-black text-white hover:bg-neutral-800">Next</Button>
         </div>
     </div>
   );

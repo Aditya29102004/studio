@@ -1,3 +1,8 @@
+// This page needs to be a client component to use hooks
+"use client";
+
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,34 +22,93 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Edit, Award, Briefcase, CheckCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const creditHistory = [
-  { date: "2023-10-26", description: "Completed Test: 'Checkout Flow Test'", amount: "+20" },
-  { date: "2023-10-25", description: "Posted Test: 'My Awesome App Test'", amount: "-500" },
-  { date: "2023-10-24", description: "Completed Test: 'Mobile Game UI Feedback'", amount: "+45" },
-];
+type Profile = {
+  full_name: string;
+  email: string;
+  avatar_url: string;
+  bio: string;
+  skills: string[];
+  credits: number;
+  reputation_score: number;
+};
 
-const badges = [
+type CreditHistory = {
+  date: string;
+  description: string;
+  amount: string;
+};
+
+export default function ProfilePage() {
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [creditHistory, setCreditHistory] = useState<CreditHistory[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        
+        if (profileData) {
+          setProfile({ ...profileData, email: user.email });
+        } else {
+          console.error(profileError);
+        }
+
+        const { data: creditData, error: creditError } = await supabase
+            .from('credit_transactions')
+            .select('created_at, description, amount')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+
+        if (creditData) {
+            setCreditHistory(creditData.map(t => ({
+                date: new Date(t.created_at).toLocaleDateString(),
+                description: t.description,
+                amount: `${t.amount > 0 ? '+' : ''}${t.amount}`
+            })))
+        } else {
+            console.error(creditError);
+        }
+
+      }
+      setLoading(false);
+    };
+
+    fetchProfile();
+  }, []);
+
+  const badges = [
     { icon: <Award className="h-6 w-6"/>, name: "First Test" },
     { icon: <Briefcase className="h-6 w-6"/>, name: "Founder" },
     { icon: <CheckCircle className="h-6 w-6"/>, name: "Top Tester" },
-]
+  ];
 
-export default function ProfilePage() {
+  if (loading) {
+      return <ProfileSkeleton />
+  }
+
   return (
     <div className="space-y-8">
         <Card className="bg-white border-neutral-200 shadow-sm">
             <CardContent className="pt-6 flex flex-col md:flex-row items-center gap-6">
                  <Avatar className="h-24 w-24 border-2 border-white ring-4 ring-neutral-200">
-                    <AvatarImage src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="User avatar" />
-                    <AvatarFallback>U</AvatarFallback>
+                    <AvatarImage src={profile?.avatar_url || `https://i.pravatar.cc/150?u=${profile?.email}`} alt="User avatar" />
+                    <AvatarFallback>{profile?.full_name?.[0] || 'U'}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 text-center md:text-left">
-                    <h2 className="text-2xl font-bold">Alex Doe</h2>
-                    <p className="text-neutral-500">alex.doe@example.com</p>
+                    <h2 className="text-2xl font-bold">{profile?.full_name}</h2>
+                    <p className="text-neutral-500">{profile?.email}</p>
                     <p className="mt-2 text-sm max-w-lg text-neutral-600">
-                    UX enthusiast and beta tester. Passionate about helping startups
-                    build intuitive and beautiful products.
+                        {profile?.bio}
                     </p>
                 </div>
                  <Button variant="outline" className="border-neutral-300 hover:bg-neutral-100">
@@ -61,11 +125,9 @@ export default function ProfilePage() {
                         <CardTitle>Skills & Interests</CardTitle>
                     </CardHeader>
                     <CardContent className="flex flex-wrap gap-2">
-                        <Badge variant="secondary" className="bg-neutral-100 text-black hover:bg-neutral-200 cursor-pointer">UX/UI</Badge>
-                        <Badge variant="secondary" className="bg-neutral-100 text-black hover:bg-neutral-200 cursor-pointer">SaaS</Badge>
-                        <Badge variant="secondary" className="bg-neutral-100 text-black hover:bg-neutral-200 cursor-pointer">Mobile Apps</Badge>
-                        <Badge variant="secondary" className="bg-neutral-100 text-black hover:bg-neutral-200 cursor-pointer">E-commerce</Badge>
-                        <Badge variant="secondary" className="bg-neutral-100 text-black hover:bg-neutral-200 cursor-pointer">Gaming</Badge>
+                        {profile?.skills?.map(skill => (
+                           <Badge key={skill} variant="secondary" className="bg-neutral-100 text-black hover:bg-neutral-200 cursor-pointer">{skill}</Badge>
+                        ))}
                     </CardContent>
                 </Card>
                  <Card className="bg-white border-neutral-200 shadow-sm">
@@ -88,12 +150,12 @@ export default function ProfilePage() {
                     <CardContent className="space-y-4">
                         <div>
                              <p className="text-sm text-neutral-500">Credits Balance</p>
-                             <p className="text-2xl font-bold">120 CC</p>
+                             <p className="text-2xl font-bold">{profile?.credits || 0} CC</p>
                         </div>
                         <div>
                              <p className="text-sm text-neutral-500">Reputation Score</p>
-                             <Progress value={88} className="h-2 mt-1 bg-neutral-200 [&>div]:bg-black" />
-                             <p className="text-right text-xs text-neutral-500 mt-1">88/100</p>
+                             <Progress value={profile?.reputation_score || 0} className="h-2 mt-1 bg-neutral-200 [&>div]:bg-black" />
+                             <p className="text-right text-xs text-neutral-500 mt-1">{profile?.reputation_score || 0}/100</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -114,7 +176,7 @@ export default function ProfilePage() {
                         </TableHeader>
                         <TableBody>
                             {creditHistory.map((item) => (
-                            <TableRow key={item.description} className="border-neutral-100">
+                            <TableRow key={item.description + item.date} className="border-neutral-100">
                                 <TableCell className="text-neutral-500">{item.date}</TableCell>
                                 <TableCell className="text-black">{item.description}</TableCell>
                                 <TableCell className={`text-right font-semibold ${item.amount.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
@@ -130,4 +192,70 @@ export default function ProfilePage() {
         </div>
     </div>
   );
+}
+
+
+function ProfileSkeleton() {
+    return (
+        <div className="space-y-8 animate-pulse">
+            <Card className="bg-white border-neutral-200 shadow-sm">
+                <CardContent className="pt-6 flex flex-col md:flex-row items-center gap-6">
+                    <Skeleton className="h-24 w-24 rounded-full bg-neutral-200" />
+                    <div className="flex-1 space-y-2 text-center md:text-left">
+                        <Skeleton className="h-8 w-48 bg-neutral-200" />
+                        <Skeleton className="h-5 w-64 bg-neutral-200" />
+                        <Skeleton className="h-4 w-full max-w-lg bg-neutral-200" />
+                    </div>
+                    <Skeleton className="h-10 w-32 bg-neutral-200 rounded-md" />
+                </CardContent>
+            </Card>
+            <div className="grid lg:grid-cols-3 gap-8 items-start">
+                <div className="lg:col-span-1 space-y-8">
+                    <Card className="bg-white border-neutral-200 shadow-sm">
+                        <CardHeader>
+                            <Skeleton className="h-6 w-32 bg-neutral-200" />
+                        </CardHeader>
+                        <CardContent className="flex flex-wrap gap-2">
+                           {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-6 w-16 bg-neutral-200 rounded-full" />)}
+                        </CardContent>
+                    </Card>
+                    <Card className="bg-white border-neutral-200 shadow-sm">
+                        <CardHeader>
+                           <Skeleton className="h-6 w-24 bg-neutral-200" />
+                        </CardHeader>
+                        <CardContent className="grid grid-cols-4 gap-4 text-center">
+                             {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-10 w-10 bg-neutral-200 rounded-md" />)}
+                        </CardContent>
+                    </Card>
+                    <Card className="bg-white border-neutral-200 shadow-sm">
+                         <CardHeader>
+                           <Skeleton className="h-6 w-16 bg-neutral-200" />
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                           <Skeleton className="h-8 w-24 bg-neutral-200" />
+                           <Skeleton className="h-6 w-full bg-neutral-200" />
+                        </CardContent>
+                    </Card>
+                </div>
+                <div className="lg:col-span-2">
+                    <Card className="bg-white border-neutral-200 shadow-sm">
+                        <CardHeader>
+                             <Skeleton className="h-8 w-40 bg-neutral-200" />
+                        </CardHeader>
+                        <CardContent>
+                             <div className="space-y-4">
+                                {[...Array(3)].map((_, i) => (
+                                    <div key={i} className="flex justify-between">
+                                        <Skeleton className="h-5 w-24 bg-neutral-200" />
+                                        <Skeleton className="h-5 w-48 bg-neutral-200" />
+                                        <Skeleton className="h-5 w-16 bg-neutral-200" />
+                                    </div>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        </div>
+    )
 }
