@@ -31,23 +31,24 @@ export function DashboardHeader() {
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-            const { data: profileData, error } = await supabase
-                .from('profiles')
-                .select('full_name, avatar_url, credits')
-                .eq('id', user.id)
-                .single();
+  const fetchProfile = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+        const { data: profileData, error } = await supabase
+            .from('profiles')
+            .select('full_name, avatar_url, credits')
+            .eq('id', user.id)
+            .single();
 
-            if (profileData) {
-                setProfile({ ...profileData, email: user.email! });
-            } else if (error) {
-                console.error("Error fetching profile", error)
-            }
+        if (profileData) {
+            setProfile({ ...profileData, email: user.email! });
+        } else if (error) {
+            console.error("Error fetching profile", error.message);
         }
     }
+  }
+
+  useEffect(() => {
     fetchProfile();
 
     const channel = supabase.channel('realtime-profile')

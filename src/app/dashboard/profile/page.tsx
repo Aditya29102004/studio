@@ -3,6 +3,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from 'next/navigation'
+import { createServerClient } from '@supabase/ssr';
 import { supabase } from "@/lib/supabaseClient";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -72,10 +73,15 @@ function ProfileContent() {
           .single();
         
         if (profileError) {
-          console.error("Error fetching profile:", profileError);
+          console.error("Error fetching profile:", profileError.message);
         } else if (profileData) {
-          const { data: authUser } = await supabase.auth.admin.getUserById(profileData.id);
-          setProfile({ ...profileData, email: authUser?.user?.email || "N/A" });
+            const { data: {user: authUser}, error: authError } = await supabase.auth.admin.getUserById(profileData.id);
+            if (authError) {
+                 console.error("Error fetching user email:", authError.message);
+                 setProfile({ ...profileData, email: "N/A" });
+            } else {
+                 setProfile({ ...profileData, email: authUser?.email || "N/A" });
+            }
         }
 
         const { data: creditData, error: creditError } = await supabase
@@ -85,7 +91,7 @@ function ProfileContent() {
             .order('created_at', { ascending: false });
 
         if (creditError) {
-            console.error("Error fetching credit history:", creditError);
+            console.error("Error fetching credit history:", creditError.message);
         } else if (creditData) {
             setCreditHistory(creditData.map(t => ({
                 date: new Date(t.created_at).toLocaleDateString(),
