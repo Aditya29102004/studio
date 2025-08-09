@@ -3,7 +3,6 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from 'next/navigation'
-import { createServerClient } from '@supabase/ssr';
 import { supabase } from "@/lib/supabaseClient";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +29,7 @@ type Profile = {
   id: string;
   full_name: string;
   email: string;
-  avatar_url: string;
+  avatar_url: string | null;
   bio: string;
   skills: string[];
   credits: number;
@@ -75,7 +74,10 @@ function ProfileContent() {
         if (profileError) {
           console.error("Error fetching profile:", profileError.message);
         } else if (profileData) {
-            setProfile({ ...profileData, email: user?.email || "N/A" });
+            setProfile({ 
+                ...profileData, 
+                email: profileData.email || user?.email || "N/A" 
+            });
         }
 
         const { data: creditData, error: creditError } = await supabase
@@ -126,13 +128,13 @@ function ProfileContent() {
             <CardContent className="pt-6 flex flex-col md:flex-row items-center gap-6">
                  <Avatar className="h-24 w-24 border-2 border-white ring-4 ring-neutral-200">
                     <AvatarImage src={profile.avatar_url || `https://i.pravatar.cc/150?u=${profile.email}`} alt="User avatar" />
-                    <AvatarFallback>{profile.full_name?.[0] || 'U'}</AvatarFallback>
+                    <AvatarFallback>{profile.full_name?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 text-center md:text-left">
                     <h2 className="text-2xl font-bold">{profile.full_name}</h2>
                     <p className="text-neutral-500">{profile.email}</p>
                     <p className="mt-2 text-sm max-w-lg text-neutral-600">
-                        {profile.bio}
+                        {profile.bio || "This user hasn't written a bio yet."}
                     </p>
                 </div>
                  {isOwnProfile && (
@@ -151,9 +153,9 @@ function ProfileContent() {
                         <CardTitle>Skills & Interests</CardTitle>
                     </CardHeader>
                     <CardContent className="flex flex-wrap gap-2">
-                        {profile.skills?.map(skill => (
+                        {profile.skills?.length > 0 ? profile.skills.map(skill => (
                            <Badge key={skill} variant="secondary" className="bg-neutral-100 text-black hover:bg-neutral-200 cursor-pointer">{skill}</Badge>
-                        ))}
+                        )) : <p className="text-sm text-neutral-500">No skills listed.</p>}
                     </CardContent>
                 </Card>
                  <Card className="bg-white border-neutral-200 shadow-sm">
