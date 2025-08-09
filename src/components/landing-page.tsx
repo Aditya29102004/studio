@@ -32,11 +32,11 @@ export function LandingPage() {
           <div>
             <Image
               src="https://placehold.co/600x400.png"
-              alt="People testing on devices"
+              alt="A lightbulb representing ideas"
               width={600}
               height={400}
               className="rounded-lg shadow-xl"
-              data-ai-hint="people testing"
+              data-ai-hint="idea innovation"
             />
           </div>
         </div>
