@@ -1,3 +1,6 @@
+"use client"
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,8 +14,42 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/icons";
 import Link from "next/link";
+import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
+
 
 export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    setLoading(false);
+    if (error) {
+      toast({
+        title: "Login Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Login Successful",
+        description: "Welcome back!",
+      });
+      router.push("/dashboard");
+    }
+  };
+
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-neutral-50">
       <Card className="w-full max-w-sm">
@@ -23,26 +60,41 @@ export default function LoginPage() {
           <CardTitle className="text-2xl">Welcome Back</CardTitle>
           <CardDescription>Enter your credentials to access your account</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="m@example.com" required />
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center">
-              <Label htmlFor="password">Password</Label>
-              <Link
-                href="#"
-                className="ml-auto inline-block text-sm underline"
-              >
-                Forgot your password?
-              </Link>
+        <CardContent>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input 
+                id="email" 
+                type="email" 
+                placeholder="m@example.com" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required 
+              />
             </div>
-            <Input id="password" type="password" required />
-          </div>
-           <Button type="submit" className="w-full bg-black text-white hover:bg-neutral-800">
-            Login
-          </Button>
+            <div className="space-y-2">
+              <div className="flex items-center">
+                <Label htmlFor="password">Password</Label>
+                <Link
+                  href="#"
+                  className="ml-auto inline-block text-sm underline"
+                >
+                  Forgot your password?
+                </Link>
+              </div>
+              <Input 
+                id="password" 
+                type="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required 
+              />
+            </div>
+            <Button type="submit" className="w-full bg-black text-white hover:bg-neutral-800" disabled={loading}>
+              {loading ? 'Logging in...' : 'Login'}
+            </Button>
+          </form>
         </CardContent>
         <CardFooter className="text-center text-sm">
             <p className="w-full">
