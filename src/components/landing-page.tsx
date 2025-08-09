@@ -109,11 +109,10 @@ export function LandingPage() {
       </div>
       <section className="bg-black text-white relative z-10">
          <Image
-            src="https://placehold.co/1920x480.png"
+            src="https://placehold.co/1920x480/png"
             alt="Testers working"
             data-ai-hint="testers working"
-            layout="fill"
-            objectFit="cover"
+            fill
             className="absolute inset-0 w-full h-full object-cover grayscale opacity-20 blur-sm z-0"
         />
         <div className="container mx-auto px-4 py-16 text-center relative z-10">
