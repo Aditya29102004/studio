@@ -36,7 +36,7 @@ const exampleTests = [
 
 export function LandingPage() {
   return (
-    <div className="bg-white text-black relative">
+    <div className="bg-white text-black relative overflow-hidden">
        <BackgroundAnimation />
       <div className="container mx-auto px-4 relative z-10">
         <section className="py-20 md:py-32">
