@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/icons";
@@ -26,9 +26,9 @@ export function DashboardHeader() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
-      <div className="container mx-auto flex h-[70px] items-center justify-between px-4">
-        <div className="flex items-center gap-8">
+    <header className="sticky top-0 z-50 w-full border-b bg-white shadow-sm h-[70px]">
+      <div className="container mx-auto flex h-full items-center justify-between px-4">
+        <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center gap-2 group">
             <Logo className="h-6 w-6 text-black" />
             <span className="font-bold text-lg text-black group-hover:text-neutral-700">IdeaSoop Beta</span>
@@ -42,7 +42,7 @@ export function DashboardHeader() {
               href={link.href}
               className={cn(
                 "text-neutral-500 transition-colors hover:text-black",
-                pathname === link.href && "text-black"
+                pathname === link.href && "text-black font-semibold"
               )}
             >
               {link.label}
@@ -74,10 +74,10 @@ export function DashboardHeader() {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/dashboard/profile">
+                 <Link href="/dashboard/profile">
                   <User className="mr-2 h-4 w-4" />
                   <span>Profile</span>
-                </Link>
+                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <LogOut className="mr-2 h-4 w-4" />
