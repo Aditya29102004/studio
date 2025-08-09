@@ -1,7 +1,8 @@
 // This page needs to be a client component to use hooks
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from 'next/navigation'
 import { supabase } from "@/lib/supabaseClient";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,7 @@ import { Edit, Award, Briefcase, CheckCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type Profile = {
+  id: string;
   full_name: string;
   email: string;
   avatar_url: string;
@@ -40,8 +42,12 @@ type CreditHistory = {
   amount: string;
 };
 
-export default function ProfilePage() {
+function ProfileContent() {
+  const searchParams = useSearchParams()
+  const profileId = searchParams.get('id')
+  
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [creditHistory, setCreditHistory] = useState<CreditHistory[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -49,24 +55,33 @@ export default function ProfilePage() {
     const fetchProfile = async () => {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
+      
+      let targetUserId = profileId;
+      if (!targetUserId) {
+          targetUserId = user?.id || null;
+          setIsOwnProfile(true);
+      } else {
+          setIsOwnProfile(user?.id === profileId);
+      }
 
-      if (user) {
+      if (targetUserId) {
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', user.id)
+          .eq('id', targetUserId)
           .single();
         
         if (profileError) {
           console.error("Error fetching profile:", profileError);
         } else if (profileData) {
-          setProfile({ ...profileData, email: user.email! });
+          const { data: authUser } = await supabase.auth.admin.getUserById(profileData.id);
+          setProfile({ ...profileData, email: authUser?.user?.email || "N/A" });
         }
 
         const { data: creditData, error: creditError } = await supabase
             .from('credit_transactions')
             .select('created_at, description, amount')
-            .eq('user_id', user.id)
+            .eq('user_id', targetUserId)
             .order('created_at', { ascending: false });
 
         if (creditError) {
@@ -84,7 +99,7 @@ export default function ProfilePage() {
     };
 
     fetchProfile();
-  }, []);
+  }, [profileId]);
 
   const badges = [
     { icon: <Award className="h-6 w-6"/>, name: "First Test" },
@@ -120,10 +135,12 @@ export default function ProfilePage() {
                         {profile.bio}
                     </p>
                 </div>
-                 <Button variant="outline" className="border-neutral-300 hover:bg-neutral-100">
-                    <Edit className="mr-2 h-4 w-4" />
-                    Edit Profile
-                </Button>
+                 {isOwnProfile && (
+                    <Button variant="outline" className="border-neutral-300 hover:bg-neutral-100">
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit Profile
+                    </Button>
+                 )}
             </CardContent>
         </Card>
 
@@ -201,6 +218,14 @@ export default function ProfilePage() {
         </div>
     </div>
   );
+}
+
+export default function ProfilePage() {
+    return (
+        <Suspense fallback={<ProfileSkeleton/>}>
+            <ProfileContent />
+        </Suspense>
+    )
 }
 
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,9 +17,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
-import { Check, Clock, Coins, Upload, Loader2 } from "lucide-react";
+import { Check, Clock, Coins, Upload, Loader2, User } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 
 type TestDetails = {
@@ -31,6 +33,11 @@ type TestDetails = {
   instructions: string[];
   questions: { type: string, content: string, options?: string[] }[];
   proof_method: 'form' | 'manual';
+  poster: {
+    id: string;
+    full_name: string;
+    avatar_url: string;
+  }
 };
 
 type Answers = {
@@ -58,7 +65,10 @@ function TestDetailsContent() {
       setLoading(true);
       const { data, error } = await supabase
         .from('tests')
-        .select('*')
+        .select(`
+            *,
+            poster:profiles ( id, full_name, avatar_url )
+        `)
         .eq('id', testId)
         .single();
       
@@ -67,10 +77,12 @@ function TestDetailsContent() {
         toast({ title: "Error", description: "Could not load test details.", variant: "destructive" });
         setTest(null);
       } else {
+        // @ts-ignore
         setTest({
             ...data,
             instructions: JSON.parse(data.instructions || '[]'),
-            questions: JSON.parse(data.questions || '[]')
+            questions: JSON.parse(data.questions || '[]'),
+            poster: data.poster
         });
       }
       setLoading(false);
@@ -142,6 +154,15 @@ function TestDetailsContent() {
                 {test.title}
               </CardTitle>
                <CardDescription className="pt-2">{test.description}</CardDescription>
+                <Link href={`/dashboard/profile?id=${test.poster.id}`} className="mt-4 flex items-center gap-2 group">
+                    <Avatar className="h-8 w-8">
+                        <AvatarImage src={test.poster.avatar_url} />
+                        <AvatarFallback>{test.poster.full_name?.[0]}</AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium text-neutral-700 group-hover:underline">
+                        Posted by {test.poster.full_name}
+                    </span>
+                </Link>
             </div>
             <div className="flex-shrink-0">
               <Button size="lg" className="bg-black text-white hover:bg-neutral-800">Start Test</Button>
@@ -237,6 +258,10 @@ function TestDetailsSkeleton() {
               </div>
               <Skeleton className="h-9 w-96 bg-neutral-200" />
               <Skeleton className="h-5 w-full max-w-lg bg-neutral-200" />
+              <div className="flex items-center gap-2 pt-2">
+                 <Skeleton className="h-8 w-8 rounded-full bg-neutral-200" />
+                 <Skeleton className="h-5 w-40 bg-neutral-200" />
+              </div>
             </div>
             <div className="flex-shrink-0">
               <Skeleton className="h-12 w-32 bg-neutral-200 rounded-lg" />
