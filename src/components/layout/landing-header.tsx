@@ -12,10 +12,10 @@ export function LandingHeader() {
         </Link>
         <div className="flex items-center gap-2">
           <Button variant="ghost" asChild className="text-black hover:bg-neutral-100">
-            <Link href="/dashboard">Login</Link>
+            <Link href="/login">Login</Link>
           </Button>
           <Button asChild className="bg-black text-white hover:bg-neutral-800">
-            <Link href="/dashboard">Sign Up</Link>
+            <Link href="/signup">Sign Up</Link>
           </Button>
         </div>
       </div>
