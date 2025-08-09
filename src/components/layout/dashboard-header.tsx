@@ -50,12 +50,21 @@ export function DashboardHeader() {
     }
     fetchProfile();
 
-    const { data: { subscription } } = supabase.from('profiles').on('*', () => {
-        fetchProfile();
-    }).subscribe();
+    const channel = supabase.channel('realtime-profile')
+      .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'profiles'
+        },
+        (payload) => {
+            fetchProfile();
+        }
+      )
+      .subscribe();
+
 
     return () => {
-        subscription.unsubscribe();
+        supabase.removeChannel(channel);
     }
   }, []);
 

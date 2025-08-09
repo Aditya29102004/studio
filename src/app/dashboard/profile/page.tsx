@@ -96,19 +96,28 @@ export default function ProfilePage() {
       return <ProfileSkeleton />
   }
 
+  if (!profile) {
+    return (
+        <div className="text-center py-16">
+            <h3 className="text-2xl font-bold">Could not load profile.</h3>
+            <p className="text-neutral-500">Please try logging out and logging back in.</p>
+        </div>
+    )
+  }
+
   return (
     <div className="space-y-8">
         <Card className="bg-white border-neutral-200 shadow-sm">
             <CardContent className="pt-6 flex flex-col md:flex-row items-center gap-6">
                  <Avatar className="h-24 w-24 border-2 border-white ring-4 ring-neutral-200">
-                    <AvatarImage src={profile?.avatar_url || `https://i.pravatar.cc/150?u=${profile?.email}`} alt="User avatar" />
-                    <AvatarFallback>{profile?.full_name?.[0] || 'U'}</AvatarFallback>
+                    <AvatarImage src={profile.avatar_url || `https://i.pravatar.cc/150?u=${profile.email}`} alt="User avatar" />
+                    <AvatarFallback>{profile.full_name?.[0] || 'U'}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 text-center md:text-left">
-                    <h2 className="text-2xl font-bold">{profile?.full_name}</h2>
-                    <p className="text-neutral-500">{profile?.email}</p>
+                    <h2 className="text-2xl font-bold">{profile.full_name}</h2>
+                    <p className="text-neutral-500">{profile.email}</p>
                     <p className="mt-2 text-sm max-w-lg text-neutral-600">
-                        {profile?.bio}
+                        {profile.bio}
                     </p>
                 </div>
                  <Button variant="outline" className="border-neutral-300 hover:bg-neutral-100">
@@ -125,7 +134,7 @@ export default function ProfilePage() {
                         <CardTitle>Skills & Interests</CardTitle>
                     </CardHeader>
                     <CardContent className="flex flex-wrap gap-2">
-                        {profile?.skills?.map(skill => (
+                        {profile.skills?.map(skill => (
                            <Badge key={skill} variant="secondary" className="bg-neutral-100 text-black hover:bg-neutral-200 cursor-pointer">{skill}</Badge>
                         ))}
                     </CardContent>
@@ -150,12 +159,12 @@ export default function ProfilePage() {
                     <CardContent className="space-y-4">
                         <div>
                              <p className="text-sm text-neutral-500">Credits Balance</p>
-                             <p className="text-2xl font-bold">{profile?.credits || 0} CC</p>
+                             <p className="text-2xl font-bold">{profile.credits || 0} CC</p>
                         </div>
                         <div>
                              <p className="text-sm text-neutral-500">Reputation Score</p>
-                             <Progress value={profile?.reputation_score || 0} className="h-2 mt-1 bg-neutral-200 [&>div]:bg-black" />
-                             <p className="text-right text-xs text-neutral-500 mt-1">{profile?.reputation_score || 0}/100</p>
+                             <Progress value={profile.reputation_score || 0} className="h-2 mt-1 bg-neutral-200 [&>div]:bg-black" />
+                             <p className="text-right text-xs text-neutral-500 mt-1">{profile.reputation_score || 0}/100</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -259,5 +268,3 @@ function ProfileSkeleton() {
         </div>
     )
 }
-
-    
