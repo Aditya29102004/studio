@@ -57,10 +57,10 @@ export default function ProfilePage() {
           .eq('id', user.id)
           .single();
         
-        if (profileData) {
-          setProfile({ ...profileData, email: user.email });
-        } else {
-          console.error(profileError);
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
+        } else if (profileData) {
+          setProfile({ ...profileData, email: user.email! });
         }
 
         const { data: creditData, error: creditError } = await supabase
@@ -69,14 +69,14 @@ export default function ProfilePage() {
             .eq('user_id', user.id)
             .order('created_at', { ascending: false });
 
-        if (creditData) {
+        if (creditError) {
+            console.error("Error fetching credit history:", creditError);
+        } else if (creditData) {
             setCreditHistory(creditData.map(t => ({
                 date: new Date(t.created_at).toLocaleDateString(),
-                description: t.description,
+                description: t.description || 'N/A',
                 amount: `${t.amount > 0 ? '+' : ''}${t.amount}`
             })))
-        } else {
-            console.error(creditError);
         }
 
       }
@@ -175,8 +175,8 @@ export default function ProfilePage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {creditHistory.map((item) => (
-                            <TableRow key={item.description + item.date} className="border-neutral-100">
+                            {creditHistory.map((item, index) => (
+                            <TableRow key={`${item.description}-${index}`} className="border-neutral-100">
                                 <TableCell className="text-neutral-500">{item.date}</TableCell>
                                 <TableCell className="text-black">{item.description}</TableCell>
                                 <TableCell className={`text-right font-semibold ${item.amount.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
@@ -259,3 +259,5 @@ function ProfileSkeleton() {
         </div>
     )
 }
+
+    
