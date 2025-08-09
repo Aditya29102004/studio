@@ -304,7 +304,7 @@ export default function PostTestPage() {
                 <CardTitle>Step 4: Review & Publish</CardTitle>
                 <CardDescription>
                     Review the details and publish your test to the community.
-                </Description>
+                </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                      <Card className="bg-neutral-50 border-neutral-200">
