@@ -109,7 +109,7 @@ export function LandingPage() {
       </div>
       <section className="bg-black text-white relative z-10">
          <Image
-            src="https://placehold.co/1920x480/png"
+            src="https://placehold.co/1920x480.png"
             alt="Testers working"
             data-ai-hint="testers working"
             fill
