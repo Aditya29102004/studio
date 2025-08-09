@@ -21,10 +21,8 @@ export function DashboardHeader() {
 
   const navLinks = [
     { href: "/dashboard", label: "Dashboard" },
-    { href: "/dashboard/browse-tests", label: "Browse Tests" },
     { href: "/dashboard/post-a-test", label: "Post a Test" },
     { href: "/dashboard/credits", label: "My Credits" },
-    { href: "/dashboard/profile", label: "Profile" },
   ];
 
   return (
