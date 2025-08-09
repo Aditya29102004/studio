@@ -55,18 +55,6 @@ const myTakenTests = [
 export default function DashboardPage() {
   return (
     <div className="space-y-8">
-      <Card className="bg-white border-neutral-200 shadow-sm">
-          <CardHeader><CardTitle>Quick Actions</CardTitle></CardHeader>
-          <CardContent className="flex flex-col sm:flex-row gap-2">
-              <Button asChild variant="outline" className="border-neutral-300 text-black hover:bg-neutral-100 justify-start">
-                  <Link href="/dashboard/post-a-test"><Briefcase className="mr-2 h-4 w-4" />Post a New Test</Link>
-              </Button>
-              <Button asChild variant="outline" className="border-neutral-300 text-black hover:bg-neutral-100 justify-start">
-                  <Link href="/dashboard/browse-tests"><CheckCircle className="mr-2 h-4 w-4" />Browse New Tests</Link>
-              </Button>
-          </CardContent>
-      </Card>
-      
       <div>
         <Tabs defaultValue="available">
           <TabsList className="bg-transparent p-0 border-b border-neutral-200 rounded-none mb-4">
