@@ -85,7 +85,7 @@ export function LandingPage() {
                     {exampleTests.map((test, index) => (
                         <Card key={index} className="bg-white border-neutral-200 shadow-sm w-80 flex-shrink-0">
                             <CardContent className="p-4 flex items-center justify-between">
-                                <p className="font-semibold text-black truncate filter blur-sm">{test.title}</p>
+                                <p className="font-semibold text-black truncate">{test.title}</p>
                                 <div className="text-sm font-semibold text-black whitespace-nowrap ml-4">{test.reward} CC</div>
                             </CardContent>
                         </Card>
@@ -95,7 +95,7 @@ export function LandingPage() {
                      {exampleTests.map((test, index) => (
                         <Card key={index + exampleTests.length} className="bg-white border-neutral-200 shadow-sm w-80 flex-shrink-0">
                              <CardContent className="p-4 flex items-center justify-between">
-                                <p className="font-semibold text-black truncate filter blur-sm">{test.title}</p>
+                                <p className="font-semibold text-black truncate">{test.title}</p>
                                 <div className="text-sm font-semibold text-black whitespace-nowrap ml-4">{test.reward} CC</div>
                             </CardContent>
                         </Card>
