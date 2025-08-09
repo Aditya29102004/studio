@@ -48,39 +48,59 @@ export default function SignUpPage() {
     }
 
     setLoading(true);
-    const { data, error } = await supabase.auth.signUp({
+    const { data: { user }, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           full_name: name,
-          bio: bio,
-          skills: selectedSkills,
-          reputation_score: 50,
-          credits: 20, // Give 20 free credits on signup
         }
       }
     });
-    setLoading(false);
+
     if (error) {
        toast({
         title: "Sign Up Failed",
         description: error.message,
         variant: "destructive",
       });
-    } else if (data.user && data.user.identities && data.user.identities.length === 0) {
+      setLoading(false);
+    } else if (user && user.identities && user.identities.length === 0) {
       toast({
         title: "Confirmation Required",
         description: "An account with this email already exists. Please check your email to confirm it.",
         variant: "destructive"
       });
+      setLoading(false);
     }
-    else {
-      toast({
-        title: "Sign Up Successful",
-        description: "Please check your email to verify your account.",
-      });
-      router.push("/login");
+    else if (user) {
+      // The trigger will have already created a profile from auth.users,
+      // now we update it with the extra details.
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: name,
+          bio: bio,
+          skills: selectedSkills,
+          reputation_score: 50,
+          credits: 20
+        })
+        .eq('id', user.id)
+
+      setLoading(false);
+      if(profileError) {
+         toast({
+            title: "Sign Up Failed",
+            description: "Could not save your profile details: " + profileError.message,
+            variant: "destructive",
+          });
+      } else {
+         toast({
+            title: "Sign Up Successful",
+            description: "Please check your email to verify your account.",
+          });
+          router.push("/login");
+      }
     }
   };
 

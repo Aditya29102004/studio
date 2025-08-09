@@ -99,6 +99,20 @@ export default function PostTestPage() {
             return;
         }
 
+        // Check if profile exists, if not, wait a bit and retry.
+        // This can happen if the user signs up and is immediately redirected.
+        let { data: profile } = await supabase.from('profiles').select('id').eq('id', user.id).single();
+        if (!profile) {
+            await new Promise(resolve => setTimeout(resolve, 1500)); // wait for db replication
+            let { data: retryProfile } = await supabase.from('profiles').select('id').eq('id', user.id).single();
+            if(!retryProfile) {
+                 toast({ title: "Failed to publish test", description: "Could not find your user profile. Please try again in a moment.", variant: "destructive" });
+                 setLoading(false);
+                 return;
+            }
+        }
+
+
         const testData = {
             user_id: user.id,
             title,
@@ -113,7 +127,6 @@ export default function PostTestPage() {
             status: 'open'
         };
 
-        // TODO: check user credits before posting
         const totalCost = parseInt(maxTesters) * parseInt(creditsPerTester);
 
         const { data, error } = await supabase.from('tests').insert([testData]).select();
@@ -122,20 +135,24 @@ export default function PostTestPage() {
             toast({ title: "Failed to publish test", description: error.message, variant: "destructive" });
             setLoading(false);
         } else {
-             const { error: creditError } = await supabase.rpc('transfer_credits', {
-                from_user_id: user.id,
-                to_user_id: user.id, // Not a real transfer, just logging deduction
-                amount_to_transfer: totalCost,
-                submission_id: null
-             })
-
-             // A bit of a hack, proper way is a transaction
-             // to deduct credits and post test atomically.
-             // For now, just deduct from profile.
+             // We don't need to call the RPC function here for deduction.
+             // We can just update the user's profile credits directly.
              const {data: profileData, error: profileError} = await supabase.from('profiles').select('credits').eq('id', user.id).single();
              if(profileData){
-                const {error: updateError} = await supabase.from('profiles').update({credits: profileData.credits - totalCost}).eq('id', user.id);
-                if(updateError) console.log("Failed to deduct credits", updateError)
+                const newCredits = profileData.credits - totalCost;
+                const {error: updateError} = await supabase.from('profiles').update({credits: newCredits}).eq('id', user.id);
+                
+                if(updateError) {
+                    console.error("Failed to deduct credits", updateError);
+                     toast({ title: "Warning", description: "Test published, but failed to deduct credits.", variant: "destructive" });
+                } else {
+                    // Also create a transaction record for the deduction
+                     await supabase.from('credit_transactions').insert({
+                        user_id: user.id,
+                        amount: -totalCost,
+                        description: `Posted test: ${title}`
+                     });
+                }
              }
 
 
