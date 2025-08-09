@@ -10,17 +10,17 @@ export function LandingPage() {
   return (
     <div className="container mx-auto px-4">
       <section className="py-20 md:py-32">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6">
+        <div className="grid md:grid-cols-1 gap-12 items-center">
+          <div className="space-y-6 text-center">
             <h1 className="text-4xl md:text-5xl font-bold font-headline tracking-tight">
               Validate Your Startup with Real Testers
             </h1>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
               Earn credits by testing, spend credits to get feedback. IdeaSoop
               Beta is the simplest way to get real-world insights for your
               product.
             </p>
-            <div className="flex space-x-4">
+            <div className="flex justify-center space-x-4">
               <Button asChild size="lg">
                 <Link href="/dashboard">Start Testing</Link>
               </Button>
@@ -28,16 +28,6 @@ export function LandingPage() {
                 <Link href="/dashboard/post-a-test">Post a Test</Link>
               </Button>
             </div>
-          </div>
-          <div>
-            <Image
-              src="https://placehold.co/600x400.png"
-              alt="A lightbulb representing ideas"
-              width={600}
-              height={400}
-              className="rounded-lg shadow-xl"
-              data-ai-hint="idea innovation"
-            />
           </div>
         </div>
       </section>
