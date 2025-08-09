@@ -54,8 +54,20 @@ const myTakenTests = [
 
 export default function DashboardPage() {
   return (
-    <div className="grid md:grid-cols-3 gap-8 items-start">
-      <div className="md:col-span-2">
+    <div className="space-y-8">
+      <Card className="bg-white border-neutral-200 shadow-sm">
+          <CardHeader><CardTitle>Quick Actions</CardTitle></CardHeader>
+          <CardContent className="flex flex-col sm:flex-row gap-2">
+              <Button asChild variant="outline" className="border-neutral-300 text-black hover:bg-neutral-100 justify-start">
+                  <Link href="/dashboard/post-a-test"><Briefcase className="mr-2 h-4 w-4" />Post a New Test</Link>
+              </Button>
+              <Button asChild variant="outline" className="border-neutral-300 text-black hover:bg-neutral-100 justify-start">
+                  <Link href="/dashboard/browse-tests"><CheckCircle className="mr-2 h-4 w-4" />Browse New Tests</Link>
+              </Button>
+          </CardContent>
+      </Card>
+      
+      <div>
         <Tabs defaultValue="available">
           <TabsList className="bg-transparent p-0 border-b border-neutral-200 rounded-none mb-4">
             <TabsTrigger value="available" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-black rounded-none">Available Tests</TabsTrigger>
@@ -65,7 +77,7 @@ export default function DashboardPage() {
           
           <TabsContent value="available">
             {availableTests.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {availableTests.map((test) => (
                   <Card key={test.title} className="bg-white border-neutral-200 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all">
                     <CardHeader>
@@ -153,51 +165,6 @@ export default function DashboardPage() {
              </Card>
           </TabsContent>
         </Tabs>
-      </div>
-      <div className="space-y-6">
-        <Card className="bg-white border-neutral-200 shadow-sm">
-          <CardHeader>
-            <CardTitle>Credits Balance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-4xl font-bold">120</p>
-            <Button asChild className="w-full mt-4 bg-black text-white hover:bg-neutral-800">
-                <Link href="/dashboard/credits">Buy Credits</Link>
-            </Button>
-          </CardContent>
-        </Card>
-         <Card className="bg-white border-neutral-200 shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Reputation Score</span>
-              <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                         <HelpCircle className="h-4 w-4 text-neutral-400 cursor-pointer" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>Your score for quality feedback.</p>
-                    </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Progress value={88} className="h-2 bg-neutral-200 [&>div]:bg-black" />
-             <p className="text-right text-sm font-medium mt-2 text-neutral-600">88/100</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-white border-neutral-200 shadow-sm">
-            <CardHeader><CardTitle>Quick Actions</CardTitle></CardHeader>
-            <CardContent className="flex flex-col gap-2">
-                <Button asChild variant="outline" className="border-neutral-300 text-black hover:bg-neutral-100 justify-start">
-                    <Link href="/dashboard/post-a-test"><Briefcase className="mr-2 h-4 w-4" />Post a New Test</Link>
-                </Button>
-                <Button asChild variant="outline" className="border-neutral-300 text-black hover:bg-neutral-100 justify-start">
-                    <Link href="/dashboard/browse-tests"><CheckCircle className="mr-2 h-4 w-4" />Browse New Tests</Link>
-                </Button>
-            </CardContent>
-        </Card>
       </div>
     </div>
   );
