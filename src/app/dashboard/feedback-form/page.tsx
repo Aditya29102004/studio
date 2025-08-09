@@ -10,34 +10,34 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
-import { Check, Star, Upload } from "lucide-react";
+import { Check, Upload, Star } from "lucide-react";
 
 export default function FeedbackFormPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="text-center">
-        <h1 className="text-3xl font-bold font-headline">New Checkout Flow Feedback</h1>
+        <h1 className="text-3xl font-bold">New Checkout Flow Feedback</h1>
         <p className="text-muted-foreground mt-2">
           Your feedback is valuable. Please answer the questions below.
         </p>
       </div>
 
-      <Card>
+      <Card className="bg-gray-50">
         <CardHeader>
-          <CardTitle>Question 1: Overall Impression</CardTitle>
+          <CardTitle className="text-base">Question 1: Overall Impression</CardTitle>
           <CardDescription>
             What was your first impression of the new checkout page design?
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Label htmlFor="q1-answer">Your Answer (min. 10 words)</Label>
           <Textarea id="q1-answer" placeholder="Type your feedback here..." />
+          <p className="text-xs text-right mt-1 text-muted-foreground">0/10 words</p>
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="bg-gray-50">
         <CardHeader>
-          <CardTitle>Question 2: Ease of Use</CardTitle>
+          <CardTitle className="text-base">Question 2: Ease of Use</CardTitle>
           <CardDescription>
             How easy was it to find the 'Continue to Payment' button?
           </CardDescription>
@@ -64,35 +64,32 @@ export default function FeedbackFormPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="bg-gray-50">
         <CardHeader>
-          <CardTitle>Question 3: Rate the experience</CardTitle>
+          <CardTitle className="text-base">Question 3: Rate the experience</CardTitle>
           <CardDescription>
             On a scale of 1 to 5, how would you rate the checkout experience?
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-2">
+           <div className="flex items-center gap-2">
             {[1, 2, 3, 4, 5].map((rating) => (
-              <Star
-                key={rating}
-                className="h-8 w-8 text-amber-400 cursor-pointer hover:text-amber-500"
-                fill="currentColor"
-              />
+                <button key={rating} className="p-2 rounded-full border-2 border-black hover:bg-black hover:text-white transition-colors">
+                    {rating}
+                </button>
             ))}
           </div>
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="bg-gray-50">
         <CardHeader>
-          <CardTitle>Question 4: Found any bugs?</CardTitle>
+          <CardTitle className="text-base">Question 4: Found any bugs?</CardTitle>
           <CardDescription>
             If you encountered any visual bugs or errors, please upload a screenshot.
           </CardDescription>
         </CardHeader>
         <CardContent>
-            <Label htmlFor="bug-upload">Upload Screenshot</Label>
             <div className="flex items-center gap-2 mt-2 p-4 border-2 border-dashed rounded-lg">
                 <Upload className="h-6 w-6 text-muted-foreground" />
                 <Input id="bug-upload" type="file" className="border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0" />
@@ -103,7 +100,7 @@ export default function FeedbackFormPage() {
       <div className="flex justify-end">
         <Button size="lg">
           <Check className="mr-2 h-4 w-4" />
-          Submit Feedback
+          Submit
         </Button>
       </div>
     </div>

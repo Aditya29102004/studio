@@ -11,56 +11,56 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell, Coins, LifeBuoy, LogOut, Settings, User } from "lucide-react";
-import { Logo } from "@/components/icons";
-import { useToast } from "@/hooks/use-toast";
+import { Coins, User, LogOut, Bell, ChevronsRight } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 export function DashboardHeader() {
-  const { toast } = useToast();
+  const pathname = usePathname();
 
-  const handleNotificationClick = () => {
-    toast({
-      title: "Reputation Alert",
-      description: "Your reputation score has decreased due to a rejected test submission.",
-      variant: "destructive",
-    });
-  };
+  const navLinks = [
+    { href: "/dashboard", label: "Dashboard" },
+    { href: "/dashboard/page", label: "Browse Tests" },
+    { href: "/dashboard/post-a-test", label: "Post a Test" },
+    { href: "/dashboard/credits", label: "My Credits" },
+    { href: "/dashboard/profile", label: "Profile" },
+  ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-card">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-2">
-            <Logo className="h-6 w-6" />
-            <span className="font-bold">IdeaSoop Beta</span>
+    <header className="sticky top-0 z-50 w-full border-b bg-card shadow-sm h-[70px]">
+      <div className="container mx-auto flex h-full items-center justify-between px-4">
+        <div className="flex items-center gap-8">
+          <Link href="/" className="flex flex-col items-start gap-0">
+            <span className="font-bold text-xl tracking-tighter">IdeaSoop Beta</span>
+            <div className="w-full h-[1px] bg-muted-foreground/50"></div>
           </Link>
-          <nav className="hidden md:flex items-center gap-4 text-sm font-medium">
-            <Link
-              href="/dashboard"
-              className="text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Browse Tests
-            </Link>
-            <Link
-              href="/dashboard/post-a-test"
-              className="text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Post a Test
-            </Link>
+          <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "text-muted-foreground transition-colors hover:text-foreground",
+                  pathname === link.href && "text-foreground"
+                )}
+              >
+                {link.label}
+              </Link>
+            ))}
           </nav>
         </div>
         <div className="flex items-center gap-4">
-           <div className="hidden sm:flex items-center gap-2 font-semibold">
-              <Coins className="h-5 w-5 text-amber-500" />
-              <span>120 Credits</span>
-            </div>
-          <Button variant="ghost" size="icon" onClick={handleNotificationClick} aria-label="Notifications">
-            <Bell className="h-5 w-5" />
-          </Button>
+           <Button variant="outline" size="sm" className="rounded-full">
+              <Coins className="h-4 w-4 mr-2 text-amber-500" />
+              <span>120</span>
+            </Button>
+            <Button variant="ghost" size="icon" aria-label="Notifications">
+              <Bell className="h-5 w-5" />
+            </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
+              <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                <Avatar className="h-9 w-9">
                   <AvatarImage src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="User avatar" />
                   <AvatarFallback>U</AvatarFallback>
                 </Avatar>
@@ -69,9 +69,9 @@ export function DashboardHeader() {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">Tester</p>
+                  <p className="text-sm font-medium leading-none">Alex Doe</p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    tester@example.com
+                    alex.doe@example.com
                   </p>
                 </div>
               </DropdownMenuLabel>
@@ -87,14 +87,6 @@ export function DashboardHeader() {
                   <Coins className="mr-2 h-4 w-4" />
                   <span>Credits</span>
                 </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <LifeBuoy className="mr-2 h-4 w-4" />
-                <span>Support</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem>

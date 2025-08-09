@@ -3,89 +3,49 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Coins } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 const creditPacks = [
-  { credits: 20, price: 200, popular: false },
-  { credits: 50, price: 450, popular: true, savings: "Save 10%" },
-  { credits: 100, price: 800, popular: false, savings: "Save 20%" },
+  { credits: 20, price: 200 },
+  { credits: 50, price: 450 },
+  { credits: 100, price: 800 },
 ];
 
 export default function CreditsPage() {
   return (
-    <div className="max-w-4xl mx-auto">
-      <Card className="mb-8 text-center">
-        <CardHeader>
-          <CardTitle className="text-2xl">Your Credits</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center gap-2">
-            <Coins className="h-10 w-10 text-amber-500" />
-            <span className="text-5xl font-bold">120</span>
-          </div>
-          <p className="text-muted-foreground mt-2">
-            Credits can be used to post your own tests for the community.
-          </p>
-        </CardContent>
-      </Card>
-
+    <div className="max-w-2xl mx-auto">
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold font-headline">Buy Credits</h2>
-        <p className="text-muted-foreground mt-2">
-          Purchase credit packs to get feedback on your projects.
-        </p>
+        <h1 className="text-3xl font-bold">Buy Credits</h1>
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">
         {creditPacks.map((pack) => (
           <Card
             key={pack.credits}
-            className={`flex flex-col ${
-              pack.popular ? "border-primary shadow-lg" : ""
-            }`}
+            className="flex flex-col text-center hover:shadow-xl hover:scale-105 transition-transform duration-300"
           >
-            {pack.popular && (
-              <div className="bg-primary text-primary-foreground text-xs font-bold text-center py-1 rounded-t-lg">
-                MOST POPULAR
-              </div>
-            )}
-            <CardHeader className="items-center text-center">
-              <CardTitle className="text-xl">{pack.credits} Credits</CardTitle>
-              {pack.savings && (
-                <Badge variant="secondary">{pack.savings}</Badge>
-              )}
+            <CardHeader>
+              <CardTitle className="text-2xl">{pack.credits} CC</CardTitle>
             </CardHeader>
-            <CardContent className="flex-grow items-center text-center">
+            <CardContent className="flex-grow">
               <p className="text-4xl font-bold">₹{pack.price}</p>
             </CardContent>
-            <CardFooter>
-              <Button className="w-full" variant={pack.popular ? "default" : "outline"}>
+            <CardFooter className="flex-col gap-2">
+                 <div className="flex justify-center items-center gap-2 mb-2">
+                    <p className="font-semibold text-muted-foreground text-sm">UPI</p>
+                    <p className="font-semibold text-muted-foreground text-sm">Razorpay</p>
+                    <p className="font-semibold text-muted-foreground text-sm">Stripe</p>
+                </div>
+              <Button className="w-full">
                 Buy Now
               </Button>
             </CardFooter>
           </Card>
         ))}
-      </div>
-
-      <div className="text-center mt-12">
-        <h3 className="text-lg font-semibold">
-          Secure Payments
-        </h3>
-        <p className="text-muted-foreground text-sm">
-          Powered by Stripe & Razorpay
-        </p>
-         <div className="flex justify-center items-center gap-4 mt-4">
-             <p className="font-semibold text-muted-foreground">UPI</p>
-             <p className="font-semibold text-muted-foreground">Razorpay</p>
-             <p className="font-semibold text-muted-foreground">Stripe</p>
-        </div>
-        <p className="text-xs text-muted-foreground mt-4">
-            All transactions are secure and encrypted.
-        </p>
       </div>
     </div>
   );
