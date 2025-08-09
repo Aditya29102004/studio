@@ -11,9 +11,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Coins, User, LogOut, Bell, ChevronsRight } from "lucide-react";
+import { Coins, User, LogOut, Bell } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/icons";
 
 export function DashboardHeader() {
   const pathname = usePathname();
@@ -22,17 +23,15 @@ export function DashboardHeader() {
     { href: "/dashboard", label: "Dashboard" },
     { href: "/dashboard/page", label: "Browse Tests" },
     { href: "/dashboard/post-a-test", label: "Post a Test" },
-    { href: "/dashboard/credits", label: "My Credits" },
-    { href: "/dashboard/profile", label: "Profile" },
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-card shadow-sm h-[70px]">
-      <div className="container mx-auto flex h-full items-center justify-between px-4">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-8">
-          <Link href="/" className="flex flex-col items-start gap-0">
-            <span className="font-bold text-xl tracking-tighter">IdeaSoop Beta</span>
-            <div className="w-full h-[1px] bg-muted-foreground/50"></div>
+          <Link href="/" className="flex items-center gap-2">
+            <Logo className="h-6 w-6" />
+            <span className="font-bold">IdeaSoop Beta</span>
           </Link>
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
             {navLinks.map((link) => (
@@ -50,12 +49,13 @@ export function DashboardHeader() {
           </nav>
         </div>
         <div className="flex items-center gap-4">
-           <Button variant="outline" size="sm" className="rounded-full">
-              <Coins className="h-4 w-4 mr-2 text-amber-500" />
-              <span>120</span>
+           <Button variant="ghost" size="icon" className="rounded-full">
+              <Coins className="h-5 w-5" />
+              <span className="sr-only">Credits</span>
             </Button>
-            <Button variant="ghost" size="icon" aria-label="Notifications">
+            <Button variant="ghost" size="icon" className="rounded-full">
               <Bell className="h-5 w-5" />
+              <span className="sr-only">Notifications</span>
             </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

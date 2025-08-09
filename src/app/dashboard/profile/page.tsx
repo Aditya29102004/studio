@@ -17,21 +17,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Award, Edit } from "lucide-react";
+import { Edit } from "lucide-react";
 
 const creditHistory = [
-  { date: "2023-10-26", description: "Tests Taken: 'Checkout Flow Test'", amount: "+20" },
-  { date: "2023-10-25", description: "Tests Posted: 'My Awesome App Test'", amount: "-500" },
-  { date: "2023-10-24", description: "Tests Taken: 'Mobile Game UI Feedback'", amount: "+45" },
+  { date: "2023-10-26", description: "Completed Test: 'Checkout Flow Test'", amount: "+20" },
+  { date: "2023-10-25", description: "Posted Test: 'My Awesome App Test'", amount: "-500" },
+  { date: "2023-10-24", description: "Completed Test: 'Mobile Game UI Feedback'", amount: "+45" },
 ];
-
-const badges = [
-    { name: "First Test"},
-    { name: "Bug Hunter"},
-    { name: "Top 10% Tester"},
-    { name: "Feedback Pro"},
-    { name: "Beta Pioneer"},
-]
 
 export default function ProfilePage() {
   return (
@@ -64,49 +56,34 @@ export default function ProfilePage() {
                         <CardTitle>Skills & Interests</CardTitle>
                     </CardHeader>
                     <CardContent className="flex flex-wrap gap-2">
-                        <Badge variant="outline">UX/UI</Badge>
-                        <Badge variant="outline">SaaS</Badge>
-                        <Badge variant="outline">Mobile Apps</Badge>
-                        <Badge variant="outline">E-commerce</Badge>
-                        <Badge variant="outline">Gaming</Badge>
+                        <Badge variant="secondary">UX/UI</Badge>
+                        <Badge variant="secondary">SaaS</Badge>
+                        <Badge variant="secondary">Mobile Apps</Badge>
+                        <Badge variant="secondary">E-commerce</Badge>
+                        <Badge variant="secondary">Gaming</Badge>
                     </CardContent>
                 </Card>
-                 <Card>
-                    <CardHeader>
-                        <CardTitle>Badges Earned</CardTitle>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-3 sm:grid-cols-4 gap-4 text-center">
-                        {badges.map(badge => (
-                            <div key={badge.name} className="flex flex-col items-center gap-2">
-                                <div className="p-3 bg-secondary rounded-full">
-                                    <Award className="h-8 w-8 text-amber-500" />
-                                </div>
-                                <p className="text-xs font-medium text-muted-foreground">{badge.name}</p>
-                            </div>
-                        ))}
-                    </CardContent>
-                </Card>
-            </div>
-             <div className="lg:col-span-2 space-y-8">
                  <Card>
                     <CardHeader>
                         <CardTitle>Stats</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div>
-                             <Label className="text-sm">Credits Balance</Label>
+                             <p className="text-sm text-muted-foreground">Credits Balance</p>
                              <p className="text-2xl font-bold">120 CC</p>
                         </div>
                         <div>
-                             <Label className="text-sm">Reputation Score</Label>
+                             <p className="text-sm text-muted-foreground">Reputation Score</p>
                              <Progress value={88} className="h-2 mt-1" />
                              <p className="text-right text-xs text-muted-foreground mt-1">88/100</p>
                         </div>
                     </CardContent>
                 </Card>
+            </div>
+             <div className="lg:col-span-2">
                 <Card>
                     <CardHeader>
-                        <CardTitle>History</CardTitle>
+                        <CardTitle>Credit History</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <Table>
@@ -120,11 +97,8 @@ export default function ProfilePage() {
                         <TableBody>
                             {creditHistory.map((item) => (
                             <TableRow key={item.description}>
-                                <TableCell className="hidden sm:table-cell">{item.date}</TableCell>
-                                <TableCell>
-                                    <p className="font-medium">{item.description}</p>
-                                    <p className="text-xs text-muted-foreground sm:hidden">{item.date}</p>
-                                </TableCell>
+                                <TableCell>{item.date}</TableCell>
+                                <TableCell>{item.description}</TableCell>
                                 <TableCell className={`text-right font-semibold ${item.amount.startsWith('+') ? 'text-green-600' : ''}`}>
                                 {item.amount} CC
                                 </TableCell>
