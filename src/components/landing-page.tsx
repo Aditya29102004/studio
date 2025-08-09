@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, Edit, Rocket } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { BackgroundAnimation } from "./background-animation";
 
 const howItWorks = [
   {
@@ -36,8 +36,9 @@ const exampleTests = [
 
 export function LandingPage() {
   return (
-    <div className="bg-white text-black">
-      <div className="container mx-auto px-4">
+    <div className="bg-white text-black relative">
+       <BackgroundAnimation />
+      <div className="container mx-auto px-4 relative z-10">
         <section className="py-20 md:py-32">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
@@ -55,16 +56,6 @@ export function LandingPage() {
                   <Link href="/dashboard/post-a-test">Post Your First Test</Link>
                 </Button>
               </div>
-            </div>
-            <div>
-              <Image
-                src="https://placehold.co/600x400.png"
-                alt="Illustration of people testing software"
-                width={600}
-                height={400}
-                className="rounded-lg"
-                data-ai-hint="monochrome illustration people laptops"
-              />
             </div>
           </div>
         </section>
@@ -113,7 +104,7 @@ export function LandingPage() {
         </section>
 
       </div>
-      <section className="bg-black text-white">
+      <section className="bg-black text-white relative z-10">
         <div className="container mx-auto px-4 py-16 text-center">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">Join hundreds of testers & founders improving startups daily.</h2>
             <Button asChild size="lg" variant="secondary" className="bg-white text-black hover:bg-neutral-200">
