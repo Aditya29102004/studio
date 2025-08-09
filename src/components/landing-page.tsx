@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, Edit, Rocket } from "lucide-react";
 import { BackgroundAnimation } from "./background-animation";
+import Image from "next/image";
+
 
 const howItWorks = [
   {
@@ -106,7 +108,15 @@ export function LandingPage() {
 
       </div>
       <section className="bg-black text-white relative z-10">
-        <div className="container mx-auto px-4 py-16 text-center">
+         <Image
+            src="https://placehold.co/1920x480.png"
+            alt="Testers working"
+            data-ai-hint="testers working"
+            layout="fill"
+            objectFit="cover"
+            className="absolute inset-0 w-full h-full object-cover grayscale opacity-20 blur-sm z-0"
+        />
+        <div className="container mx-auto px-4 py-16 text-center relative z-10">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">Join hundreds of testers & founders improving startups daily.</h2>
             <Button asChild size="lg" variant="secondary" className="bg-white text-black hover:bg-neutral-200">
                 <Link href="/signup">Get Started Free</Link>
