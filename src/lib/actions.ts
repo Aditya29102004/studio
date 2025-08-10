@@ -6,9 +6,9 @@ import { cookies } from 'next/headers';
 export async function createSupabaseServerClient() {
     const cookieStore = cookies()
 
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-        throw new Error("Your project's URL and Key are required to create a Supabase client!\n\nCheck your Supabase project's API settings to find these values\n\nhttps://supabase.com/dashboard/project/_/settings/api");
-    }
+    // if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    //     throw new Error("Your project's URL and Key are required to create a Supabase client!\n\nCheck your Supabase project's API settings to find these values\n\nhttps://supabase.com/dashboard/project/_/settings/api");
+    // }
 
     return createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
