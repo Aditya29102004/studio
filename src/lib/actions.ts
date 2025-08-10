@@ -2,13 +2,24 @@
 
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { NextConfig } from 'next';
+import getConfig from 'next/config';
+
 
 export async function createSupabaseServerClient() {
     const cookieStore = cookies();
+    const { serverRuntimeConfig } = getConfig() as { serverRuntimeConfig: NextConfig['serverRuntimeConfig']};
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceRoleKey = serverRuntimeConfig?.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !supabaseServiceRoleKey) {
+        throw new Error("Your project's URL and Key are required to create a Supabase client!\n\nCheck your Supabase project's API settings to find these values\n\nhttps://supabase.com/dashboard/project/_/settings/api");
+    }
 
     return createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        supabaseUrl,
+        supabaseServiceRoleKey,
         {
             cookies: {
                 get(name: string) {
