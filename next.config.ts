@@ -21,10 +21,6 @@ const nextConfig: NextConfig = {
   experimental: {
     serverActions: {},
   },
-  serverRuntimeConfig: {
-    // Will only be available on the server side
-    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
-  },
 };
 
 export default nextConfig;
