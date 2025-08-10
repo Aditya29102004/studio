@@ -22,8 +22,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Edit, Award, Briefcase, CheckCircle } from "lucide-react";
+import { Edit, Award, Briefcase, CheckCircle, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { updateUserProfile } from "@/lib/actions";
+import { useToast } from "@/hooks/use-toast";
 
 type Profile = {
   id: string;
@@ -42,6 +48,8 @@ type CreditHistory = {
   amount: string;
 };
 
+const allSkills = ["UX/UI", "SaaS", "Mobile Apps", "E-commerce", "Gaming", "Fintech", "AI/ML", "Developer Tools"];
+
 function ProfileContent() {
   const searchParams = useSearchParams()
   const profileId = searchParams.get('id')
@@ -50,56 +58,57 @@ function ProfileContent() {
   const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [creditHistory, setCreditHistory] = useState<CreditHistory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const fetchProfile = async () => {
+    setLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    let targetUserId = profileId;
+    if (!targetUserId) {
+        targetUserId = user?.id || null;
+        setIsOwnProfile(true);
+    } else {
+        setIsOwnProfile(user?.id === profileId);
+    }
+
+    if (targetUserId) {
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', targetUserId)
+        .single();
+      
+      if (profileError) {
+        console.error("Error fetching profile:", profileError.message);
+      } else if (profileData) {
+          setProfile({ 
+              ...profileData, 
+              email: profileData.email || user?.email || "N/A" 
+          });
+      }
+
+      const { data: creditData, error: creditError } = await supabase
+          .from('credit_transactions')
+          .select('created_at, description, amount')
+          .eq('user_id', targetUserId)
+          .order('created_at', { ascending: false });
+
+      if (creditError) {
+          console.error("Error fetching credit history:", creditError.message);
+      } else if (creditData) {
+          setCreditHistory(creditData.map(t => ({
+              date: new Date(t.created_at).toLocaleDateString(),
+              description: t.description || 'N/A',
+              amount: `${t.amount > 0 ? '+' : ''}${t.amount}`
+          })))
+      }
+
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      let targetUserId = profileId;
-      if (!targetUserId) {
-          targetUserId = user?.id || null;
-          setIsOwnProfile(true);
-      } else {
-          setIsOwnProfile(user?.id === profileId);
-      }
-
-      if (targetUserId) {
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', targetUserId)
-          .single();
-        
-        if (profileError) {
-          console.error("Error fetching profile:", profileError.message);
-        } else if (profileData) {
-            setProfile({ 
-                ...profileData, 
-                email: profileData.email || user?.email || "N/A" 
-            });
-        }
-
-        const { data: creditData, error: creditError } = await supabase
-            .from('credit_transactions')
-            .select('created_at, description, amount')
-            .eq('user_id', targetUserId)
-            .order('created_at', { ascending: false });
-
-        if (creditError) {
-            console.error("Error fetching credit history:", creditError.message);
-        } else if (creditData) {
-            setCreditHistory(creditData.map(t => ({
-                date: new Date(t.created_at).toLocaleDateString(),
-                description: t.description || 'N/A',
-                amount: `${t.amount > 0 ? '+' : ''}${t.amount}`
-            })))
-        }
-
-      }
-      setLoading(false);
-    };
-
     fetchProfile();
   }, [profileId]);
 
@@ -127,7 +136,7 @@ function ProfileContent() {
         <Card className="bg-white border-neutral-200 shadow-sm">
             <CardContent className="pt-6 flex flex-col md:flex-row items-center gap-6">
                  <Avatar className="h-24 w-24 border-2 border-white ring-4 ring-neutral-200">
-                    <AvatarImage src={profile.avatar_url || `https://i.pravatar.cc/150?u=${profile.email}`} alt="User avatar" />
+                    <AvatarImage src={profile.avatar_url || undefined} alt="User avatar" />
                     <AvatarFallback>{profile.full_name?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 text-center md:text-left">
@@ -138,10 +147,12 @@ function ProfileContent() {
                     </p>
                 </div>
                  {isOwnProfile && (
-                    <Button variant="outline" className="border-neutral-300 hover:bg-neutral-100">
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit Profile
-                    </Button>
+                    <EditProfileDialog profile={profile} onProfileUpdate={fetchProfile}>
+                        <Button variant="outline" className="border-neutral-300 hover:bg-neutral-100">
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit Profile
+                        </Button>
+                    </EditProfileDialog>
                  )}
             </CardContent>
         </Card>
@@ -220,6 +231,88 @@ function ProfileContent() {
         </div>
     </div>
   );
+}
+
+function EditProfileDialog({ children, profile, onProfileUpdate }: { children: React.ReactNode, profile: Profile, onProfileUpdate: () => void }) {
+    const { toast } = useToast();
+    const [open, setOpen] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [formData, setFormData] = useState({
+        full_name: profile.full_name,
+        bio: profile.bio || '',
+        skills: profile.skills || [],
+    });
+
+    const handleFieldChange = (field: 'full_name' | 'bio', value: string) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+    }
+
+    const toggleSkill = (skill: string) => {
+        setFormData(prev => ({
+            ...prev,
+            skills: prev.skills.includes(skill)
+                ? prev.skills.filter(s => s !== skill)
+                : [...prev.skills, skill]
+        }));
+    };
+
+    const handleSave = async () => {
+        setSaving(true);
+        const result = await updateUserProfile(formData);
+        if (result.error) {
+            toast({ title: "Update failed", description: result.error, variant: "destructive" });
+        } else {
+            toast({ title: "Success", description: "Your profile has been updated." });
+            onProfileUpdate();
+            setOpen(false);
+        }
+        setSaving(false);
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                {children}
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>Edit Profile</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="name" className="text-right">Name</Label>
+                        <Input id="name" value={formData.full_name} onChange={e => handleFieldChange('full_name', e.target.value)} className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="bio" className="text-right">Bio</Label>
+                        <Textarea id="bio" value={formData.bio} onChange={e => handleFieldChange('bio', e.target.value)} className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label className="text-right">Skills</Label>
+                        <div className="col-span-3 flex flex-wrap gap-2">
+                             {allSkills.map(skill => (
+                                <Badge
+                                    key={skill}
+                                    variant={formData.skills.includes(skill) ? "default" : "secondary"}
+                                    onClick={() => toggleSkill(skill)}
+                                    className="cursor-pointer bg-neutral-100 text-black hover:bg-neutral-200 data-[state=active]:bg-black data-[state=active]:text-white"
+                                    data-state={formData.skills.includes(skill) ? 'active' : 'inactive'}
+                                >
+                                    {skill}
+                                </Badge>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button onClick={handleSave} disabled={saving} className="bg-black text-white hover:bg-neutral-800">
+                        {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Save changes
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
 }
 
 export default function ProfilePage() {

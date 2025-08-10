@@ -29,6 +29,30 @@ export async function createSupabaseServerClient() {
     )
 }
 
+export async function updateUserProfile(profileData: { full_name: string; bio: string; skills: string[] }) {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return { error: "You must be logged in to update your profile." };
+    }
+
+    const { data, error } = await supabase
+        .from('profiles')
+        .update({
+            full_name: profileData.full_name,
+            bio: profileData.bio,
+            skills: profileData.skills,
+        })
+        .eq('id', user.id);
+
+    if (error) {
+        return { error: "Failed to update profile: " + error.message };
+    }
+    
+    return { success: true, data };
+}
+
 export async function postNewTest(testData: any) {
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
