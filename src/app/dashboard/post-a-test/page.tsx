@@ -99,7 +99,7 @@ export default function PostTestPage() {
             estimated_time: parseInt(estimatedTime),
             max_testers: parseInt(maxTesters),
             reward_credits: parseInt(creditsPerTester),
-            instructions,
+            instructions: instructions.filter(inst => inst.trim() !== ''), // Filter out empty strings
             proof_method: proofMethod,
             questions,
             status: 'open'
