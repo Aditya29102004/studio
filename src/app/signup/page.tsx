@@ -43,7 +43,6 @@ export default function SignUpPage() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (step === 1) {
-      // Simple validation for first step
       if(name && email && password) {
           setStep(2);
       } else {
@@ -53,7 +52,8 @@ export default function SignUpPage() {
     }
 
     setLoading(true);
-    const { data: { user }, error } = await supabase.auth.signUp({
+    // Sign up the user
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -64,40 +64,36 @@ export default function SignUpPage() {
     });
 
     if (error) {
-       toast({
+      toast({
         title: "Sign Up Failed",
         description: error.message,
         variant: "destructive",
       });
       setLoading(false);
       return;
-    } 
-    
-    // This case handles when the user already exists but hasn't confirmed their email.
-    if (user && user.identities && user.identities.length === 0) {
+    }
+
+    if (data.user && data.user.identities && data.user.identities.length === 0) {
       toast({
-        title: "Confirmation Required",
-        description: "An account with this email already exists but is not verified. Please check your email to confirm it.",
+        title: "Account already exists",
+        description: "An account with this email already exists but is not verified. Please check your email to confirm it or log in.",
         variant: "destructive"
       });
-       setLoading(false);
-       return;
+      setLoading(false);
+      return;
     }
-    
-    if (user) {
-      // Supabase automatically creates a profile via a trigger on `auth.users` table insertion.
-      // Now, we just need to update it with the additional details from the second step.
+
+    if (data.user) {
+      // The profile is created by a trigger. Now we update it with the extra info.
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
-          full_name: name,
           bio: bio,
           skills: selectedSkills,
-          reputation_score: 50, // Initial reputation
-          credits: 20 // Welcome credits
+          updated_at: new Date().toISOString()
         })
-        .eq('id', user.id)
-
+        .eq('id', data.user.id);
+      
       if(profileError) {
          toast({
             title: "Profile Update Failed",
@@ -105,13 +101,6 @@ export default function SignUpPage() {
             variant: "destructive",
           });
       } else {
-        // Log the initial credit transaction
-        await supabase.from('credit_transactions').insert({
-            user_id: user.id,
-            amount: 20,
-            description: 'Welcome bonus on signup',
-        });
-        
          toast({
             title: "Sign Up Successful!",
             description: "Please check your email to verify your account.",
@@ -119,7 +108,7 @@ export default function SignUpPage() {
           router.push("/login");
       }
     }
-     setLoading(false);
+    setLoading(false);
   };
 
   return (
@@ -186,7 +175,7 @@ export default function SignUpPage() {
              <>
               <CardHeader className="space-y-1 text-center">
                 <CardTitle className="text-2xl">Tell Us About Yourself</CardTitle>
-                <CardDescription>This helps us recommend relevant tests for you. You've earned 20 credits for signing up!</CardDescription>
+                <CardDescription>This helps us recommend relevant tests. You've earned 20 credits for signing up!</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">

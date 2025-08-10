@@ -46,6 +46,7 @@ export async function updateUserProfile(profileData: { full_name: string; bio: s
             full_name: profileData.full_name,
             bio: profileData.bio,
             skills: profileData.skills,
+            updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
 
@@ -81,7 +82,22 @@ export async function postNewTest(testData: any) {
         return { error: `Insufficient credits. You need ${totalCost} credits, but you only have ${profile.credits}.` };
     }
     
-    // Insert test
+    // Use a transaction to ensure atomicity
+    // Supabase doesn't support multi-table transactions in JS SDK directly, so we use an RPC function
+    // For now, we will do it in sequence and accept the minor risk, as setting up RPC is more involved.
+
+    // 3. Deduct credits from poster
+    const newBalance = profile.credits - totalCost;
+    const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ credits: newBalance })
+        .eq('id', user.id);
+
+    if (updateError) {
+        return { error: "Failed to deduct credits. " + updateError.message };
+    }
+    
+    // 4. Insert the new test
     const { data: newTest, error: testError } = await supabase
         .from('tests')
         .insert([{ 
@@ -94,29 +110,15 @@ export async function postNewTest(testData: any) {
         .single();
     
     if (testError) {
+         // If test insertion fails, we must refund the credits.
+        await supabase
+            .from('profiles')
+            .update({ credits: profile.credits }) // Revert to original balance
+            .eq('id', user.id);
         return { error: "Failed to create the test. " + testError.message };
     }
 
-    // 3. Deduct credits and insert test in a transaction
-    // Supabase doesn't support multi-table transactions in JS, so we use an RPC function
-    // For now, we will do it in sequence and accept the minor risk.
-
-    // Deduct credits
-    const newBalance = profile.credits - totalCost;
-    const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ credits: newBalance })
-        .eq('id', user.id);
-
-    if (updateError) {
-        // If this fails, we should ideally roll back the test insertion.
-        // This is where a proper transaction would be crucial.
-        // For now, we'll log the error and the test will exist without credit deduction.
-        console.error("CRITICAL: Failed to deduct credits for test", newTest.id);
-        return { error: "Test created, but failed to deduct credits." };
-    }
-    
-    // Log transaction
+    // 5. Log the credit transaction
     const { error: txError } = await supabase.from('credit_transactions').insert({
         user_id: user.id,
         amount: -totalCost,
@@ -125,6 +127,7 @@ export async function postNewTest(testData: any) {
     });
 
     if (txError) {
+        // This is a non-critical error for the user, but should be logged for admins.
         console.error("CRITICAL: Failed to log credit transaction for test", newTest.id);
     }
 
@@ -137,6 +140,12 @@ export async function submitTestFeedback(testId: number, answers: any) {
 
     if (!user) {
         return { error: "You must be logged in to submit feedback." };
+    }
+
+    // Check if user is submitting to their own test
+    const { data: testDetails } = await supabase.from('tests').select('user_id').eq('id', testId).single();
+    if (testDetails?.user_id === user.id) {
+        return { error: "You cannot submit feedback for your own test." };
     }
 
     // Check for duplicate submission
@@ -175,34 +184,33 @@ export async function submitTestFeedback(testId: number, answers: any) {
 export async function approveSubmission(submissionId: number) {
     const supabase = await createSupabaseServerClient();
     
-    // Check if the current user is the poster of the test associated with the submission
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
         return { error: "You must be logged in." };
     }
 
+    // Get submission details and verify ownership in one go
     const { data: submission, error: submissionError } = await supabase
         .from('test_submissions')
-        .select('id, status, user_id, test:tests(user_id, reward_credits)')
+        .select('id, status, user_id, test:tests!inner(user_id, reward_credits)')
         .eq('id', submissionId)
+        .eq('test.user_id', user.id) // Ensures only the poster can fetch it
         .single();
 
-    if (submissionError) {
-        return { error: "Could not find submission: " + submissionError.message };
+    if (submissionError || !submission) {
+        return { error: "Submission not found or you are not authorized to approve it." };
     }
     
-    // @ts-ignore
-    if (submission?.test?.user_id !== user.id) {
-        return { error: "You are not authorized to approve this submission." };
+    if (submission.status !== 'pending') {
+        return { error: `This submission has already been ${submission.status}.` };
     }
-
+    
     // Call the RPC function to handle the logic atomically
     const { error: rpcError } = await supabase.rpc('approve_submission_and_transfer_credits', {
         p_submission_id: submissionId,
         // @ts-ignore
         p_reward_amount: submission.test.reward_credits,
-        // @ts-ignore
-        p_poster_id: submission.test.user_id,
+        p_poster_id: user.id,
         p_tester_id: submission.user_id,
     });
 
@@ -216,22 +224,25 @@ export async function approveSubmission(submissionId: number) {
 export async function rejectSubmission(submissionId: number) {
      const supabase = await createSupabaseServerClient();
     
-    // Authorization check
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { error: "You must be logged in." };
 
     const { data: submission, error: submissionError } = await supabase
         .from('test_submissions')
-        .select('id, test:tests(user_id)')
+        .select('id, status, test:tests!inner(user_id, reward_credits)')
         .eq('id', submissionId)
+        .eq('test.user_id', user.id)
         .single();
         
-    // @ts-ignore
-    if (submission?.test?.user_id !== user.id) {
-        return { error: "You are not authorized to reject this submission." };
+    if (submissionError || !submission) {
+        return { error: "Submission not found or you are not authorized to reject it." };
+    }
+
+    if (submission.status !== 'pending') {
+        return { error: `This submission has already been ${submission.status}.` };
     }
     
-    // Update status
+    // Update submission status
     const { error } = await supabase
         .from('test_submissions')
         .update({ status: 'rejected' })
@@ -240,6 +251,27 @@ export async function rejectSubmission(submissionId: number) {
     if (error) {
         return { error: "Failed to reject submission: " + error.message };
     }
+
+    // Return the locked credits to the poster
+    // @ts-ignore
+    const rewardAmount = submission.test.reward_credits;
+    const { error: creditReturnError } = await supabase.rpc('increment_credit_balance', {
+        user_id_in: user.id,
+        amount_in: rewardAmount
+    });
+
+    if (creditReturnError) {
+        console.error(`CRITICAL: Failed to return credits to poster ${user.id} for rejected submission ${submissionId}`);
+        return { error: "Submission rejected, but failed to return credits. Please contact support." };
+    }
+
+    // Log the credit return transaction
+    await supabase.from('credit_transactions').insert({
+        user_id: user.id,
+        submission_id: submissionId,
+        amount: rewardAmount,
+        description: 'Credits returned for rejected submission'
+    });
     
     return { success: true };
 }

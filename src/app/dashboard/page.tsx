@@ -117,6 +117,31 @@ export default function DashboardPage() {
 
     useEffect(() => {
         fetchTests();
+        
+        const channel = supabase.channel('realtime-dashboard')
+          .on('postgres_changes', {
+              event: '*',
+              schema: 'public',
+              table: 'tests'
+            },
+            (payload) => {
+                fetchTests();
+            }
+          )
+          .on('postgres_changes', {
+              event: '*',
+              schema: 'public',
+              table: 'test_submissions'
+            },
+            (payload) => {
+                fetchTests();
+            }
+          )
+          .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        }
     }, []);
 
     if (loading) {

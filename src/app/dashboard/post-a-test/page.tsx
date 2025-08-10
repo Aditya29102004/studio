@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle, PlusCircle, Trash2, Upload, Video, Loader2 } from "lucide-react";
+import { CheckCircle, PlusCircle, Trash2, Video, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { postNewTest } from "@/lib/actions";
 
@@ -49,7 +49,7 @@ export default function PostTestPage() {
     const [instructions, setInstructions] = useState<string[]>(['']);
 
     // Step 3 State
-    const [proofMethod, setProofMethod] = useState('form');
+    const [proofMethod, setProofMethod] = useState<'form' | 'manual'>('form');
     const [questions, setQuestions] = useState<Question[]>([{ type: 'text', content: '' }]);
 
     const addInstructionStep = () => {
@@ -99,9 +99,9 @@ export default function PostTestPage() {
             estimated_time: parseInt(estimatedTime),
             max_testers: parseInt(maxTesters),
             reward_credits: parseInt(creditsPerTester),
-            instructions: instructions.filter(inst => inst.trim() !== ''), // Filter out empty strings
+            instructions: instructions.filter(inst => inst.trim() !== ''),
             proof_method: proofMethod,
-            questions,
+            questions: questions.filter(q => q.content.trim() !== ''),
             status: 'open'
         };
 
@@ -162,7 +162,8 @@ export default function PostTestPage() {
                                     <SelectItem value="Website">Website</SelectItem>
                                     <SelectItem value="App">App</SelectItem>
                                     <SelectItem value="Form">Form</SelectItem>
-                                    <SelectItem value="Design-Review">Design Review</SelectItem>
+                                    <SelectItem value="Design Review">Design Review</SelectItem>
+                                    <SelectItem value="Other">Other</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -241,7 +242,7 @@ export default function PostTestPage() {
                 <CardContent className="space-y-6">
                     <div>
                         <Label className="mb-2 block">Proof Method</Label>
-                        <RadioGroup value={proofMethod} onValueChange={setProofMethod} className="flex gap-4">
+                        <RadioGroup value={proofMethod} onValueChange={(val) => setProofMethod(val as 'form' | 'manual')} className="flex gap-4">
                             <Label htmlFor="form-proof" className="flex-1 p-4 border rounded-md cursor-pointer has-[:checked]:border-black">
                                 <RadioGroupItem value="form" id="form-proof" className="sr-only" />
                                 <h4 className="font-semibold">Inbuilt Form</h4>
